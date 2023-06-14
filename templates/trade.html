@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trade</title>
+</head>
+<body>
+I will buy or sell stock here!
+
+ <form name="buyForm"  action="/buystock/"  method="POST">
+        {% csrf_token %}
+
+         {{ stock_form.as_p}}
+         {{ buy_form.as_p }}
+
+
+        <input type="submit" name="bconfirm" value="买入" />&nbsp;&nbsp;
+
+	</form>
+     <form name="sellForm"  action="/sellstock/"  method="POST">
+        {% csrf_token %}
+
+         {{ stock_form.as_p}}
+         {{ sell_form.as_p }}
+
+
+        <input type="submit" name="bconfirm" value="卖出" />&nbsp;&nbsp;
+
+	</form>
+
+
+<div class='table' style="text-align: center;">
+<table border="1">
+      <tr>
+		  <th>时间</th>
+		  <th>股票代码</th>
+		  <th>股票名称</th>
+		  <th>操作</th>
+		  <th>数量</th>
+		  <th>价格</th>
+		  <th>金额</th>
+	  </tr>
+	{% for item in records %}
+      <tr>
+		  <td>{{ item.date }}</td>
+		  <td>{{ item.stock.code }}</td>
+		  <td>{{ item.stock.name }}</td>
+		  <td>{{ item.mark }}</td>
+		  <td>{{ item.quantity }}</td>
+		  <td>{{ item.price }}</td>
+		  <td>{{ item.amount }}</td>
+	  </tr>
+	{% endfor %}
+   </table>
+</div>
+
+
+
+
+</body>
+</html>
