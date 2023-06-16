@@ -1,35 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Trade</title>
-</head>
-<body>
-I will buy or sell stock here!
+{% extends 'base.html' %}
+
+
+{% block title %}
+Trade
+{% endblock %}
+
+
+
+
+
+{% block content %}
+<h2> will buy or sell stock here!</h2>
 
  <form name="buyForm"  action="/buystock/"  method="POST">
         {% csrf_token %}
+     <table>
+         <tr>
+             <td>股票代码：</td>
+             <td>{{ stock_form.code }}</td>
+         </tr>
+         <tr>
+             <td>股票价格：</td>
+             <td>{{ buy_form.price }}</td>
+         </tr>
+         <tr>
+             <td>股票数量：</td>
+             <td>{{ buy_form.quantity }}</td>
+         </tr>
+         <tr>
+             <td> </td>
+             <td><input type="submit" name="bconfirm" value="买入" />&nbsp;&nbsp;</td>
+         </tr>
 
-         {{ stock_form.as_p}}
-         {{ buy_form.as_p }}
 
-
-        <input type="submit" name="bconfirm" value="买入" />&nbsp;&nbsp;
-
-	</form>
-     <form name="sellForm"  action="/sellstock/"  method="POST">
+     </table>
+ </form>
+<br>
+<br>
+<form name="sellForm"  action="/sellstock/"  method="POST">
         {% csrf_token %}
 
-         {{ stock_form.as_p}}
-         {{ sell_form.as_p }}
+        <table>
+         <tr>
+             <td>股票代码：</td>
+             <td>{{ stock_form.code }}</td>
+         </tr>
+         <tr>
+             <td>股票价格：</td>
+             <td>{{ sell_form.price }}</td>
+         </tr>
+         <tr>
+             <td>股票数量：</td>
+             <td>{{ sell_form.quantity }}</td>
+         </tr>
+         <tr>
+             <td> </td>
+             <td> <input type="submit" name="bconfirm" value="卖出" />&nbsp;&nbsp;&nbsp;&nbsp;</td>
+         </tr>
+     </table>
 
 
-        <input type="submit" name="bconfirm" value="卖出" />&nbsp;&nbsp;
-
-	</form>
+</form>
 
 
-<div class='table' style="text-align: center;">
+<div class='table_record' style="text-align: center;">
 <table border="1">
       <tr>
 		  <th>时间</th>
@@ -43,8 +77,8 @@ I will buy or sell stock here!
 	{% for item in records %}
       <tr>
 		  <td>{{ item.date }}</td>
-		  <td>{{ item.stock.code }}</td>
-		  <td>{{ item.stock.name }}</td>
+		  <td> {{ item.stock.code }} </td>
+		   <td><a  href="{% url 'stocks:stockdetail' item.stock.code %}" > {{ item.stock.name }} </a></td>
 		  <td>{{ item.mark }}</td>
 		  <td>{{ item.quantity }}</td>
 		  <td>{{ item.price }}</td>
@@ -55,7 +89,4 @@ I will buy or sell stock here!
 </div>
 
 
-
-
-</body>
-</html>
+{% endblock %}

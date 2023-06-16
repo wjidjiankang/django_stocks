@@ -21,7 +21,7 @@ from stocks import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('stocks.urls')),
+    path('', include('stocks.urls',namespace='stocks')),
     # re_path(r'^$', views.index),
     # re_path(r'^data_entry/$', views.data_entry, name='data_entry'),
     # re_path(r'^add_fund_manger/$', views.add_fund_manger),

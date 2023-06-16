@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Detail
+{% endblock %}
+
+
+{% block content %}
+<h1>welcome，it just is a cover</h1>
+<table>
+    <tr>
+        <td>代码</td>
+        <td>{{ stock.code }}</td>
+    </tr>
+    <tr>
+        <td>名称</td>
+       <td>{{ stock.name }}</td>
+    </tr>
+    <tr>
+        <td>最新价格</td>
+       <td>{{ stock.close }}</td>
+    </tr>
+    <tr>
+        <td>持有</td>
+       <td>{{ stock.quantityinhand }}</td>
+    </tr>
+    <tr>
+        <td>市值</td>
+        <td>{{ stock.value }}</td>
+    </tr>
+    <tr>
+        <td>收益</td>
+        <td>{{ stock.profit }}</td>
+    </tr>
+    <tr>
+		  <td> 估值</td>
+		  <td>{{ stock.estimation }}</td>
+ </tr>
+</table>
+<p>
+交易记录
+</p>
+    <div class='table_record' style="text-align: center;">
+<table border="1">
+      <tr>
+		  <th>时间</th>
+		  <th>股票代码</th>
+		  <th>股票名称</th>
+		  <th>操作</th>
+		  <th>数量</th>
+		  <th>价格</th>
+		  <th>金额</th>
+	  </tr>
+	{% for item in records %}
+      <tr>
+		  <td>{{ item.date }}</td>
+		  <td> {{ item.stock.code }} </td>
+		   <td><a  href="{% url 'stocks:stockdetail' item.stock.code %}" > {{ item.stock.name }} </a></td>
+		  <td>{{ item.mark }}</td>
+		  <td>{{ item.quantity }}</td>
+		  <td>{{ item.price }}</td>
+		  <td>{{ item.amount }}</td>
+	  </tr>
+	{% endfor %}
+   </table>
+
+{% endblock %}
+
+
+

@@ -1,14 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-welcome，{{ name }}
+{% extends 'base.html' %}
+
+{% block title %}
+Index
+{% endblock %}
+
+
+{% block content %}
+<h1>welcome，it just is a cover</h1>
+{#<a  href="{% url 'stocks:detail/{{ stock.code }}' %}" >持仓</a>#}
+{% endblock %}
 
 
 
-
-</body>
-</html>

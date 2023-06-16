@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}
+In Hand
+{% endblock %}
+
+
+
+{% block content %}
+
+<h2>the stock in myhand</h2>
+
+<div class='table_stock' style="text-align: center;">
+<table border="1">
+      <tr>
+		  <th>股票代码</th>
+		  <th>股票名称</th>
+		  <th>现价</th>
+		  <th>数量</th>
+		  <th>市值</th>
+          <th>涨幅</th>
+		  <th>日盈亏</th>
+          <th>总盈亏</th>
+	  </tr>
+	{% for item in stocks %}
+      <tr>
+		  <td> {{ item.code}} </td>
+          <td><a  href="{% url 'stocks:stockdetail' item.code %}" > {{ item.name}} </a></td>
+          <td>{{ item.close }}</td>
+		  <td>{{ item.quantityinhand }}</td>
+		  <td>{{ item.value }}</td>
+		  <td>{{ item.ratio }}</td>
+		  <td>{{ item.profit_day }}</td>
+      	  <td>{{ item.profit }}</td>
+	  </tr>
+	{% endfor %}
+   </table>
+</div>
+<p>市值：{{ profit.value }}</p>
+<p>今天小赚：{{ profit.profit }}</p>
+
+{% endblock %}

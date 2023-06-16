@@ -17,10 +17,10 @@ class StcokInHand(models.Model):
     sellquantity = models.IntegerField(default=0)
     sellamount = models.FloatField(default= 0 )
     quantityinhand = models.IntegerField()
-    profit = models.FloatField(default= 0 )
-    estimation = models.FloatField(default= 0 )
-    value = models.FloatField(default=0)
-    profit_day = models.FloatField(default=0)
+    profit = models.FloatField(default= 0 ) #收益
+    estimation = models.FloatField(default= 0 )  #估值
+    value = models.FloatField(default=0)   #市值
+    profit_day = models.FloatField(default=0)  # 当日收益
     profit_ratio = models.FloatField(default=0,blank=True, null=True)
 
     # def __init__(self, code):
@@ -132,10 +132,12 @@ class Profit(models.Model):
     total = models.FloatField(default=0)
     pre_total = models.FloatField(default=0)
     profit = models.FloatField(default=0)
+    cash = models.FloatField(default=0)
+    pre_cash = models.FloatField(default=0)
 
     def save(self, *args, **kargs):
         self.date = datetime.now().strftime('%Y-%m-%d')
-        self.total = round((self.value+self.sellamount-self.buyamount),3)
+        self.total = round((self.value+self.cash),3)
         self.profit = self.total - self.pre_total
         super(Profit, self).save(*args, **kargs)
 

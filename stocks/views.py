@@ -1,7 +1,8 @@
-from django.shortcuts import render,HttpResponse,redirect
+from django.shortcuts import render,HttpResponse,redirect,get_object_or_404
 from .forms import BuystockForm,SellstockForm,StockinhandForm
 from .models import Record,StcokInHand,Profit
 from datetime import datetime
+from .myinfom import profit_init
 
 # Create your views here.
 
@@ -9,6 +10,7 @@ def index(request):
     # return HttpResponse('hello')
     dict = {'name':'peter'}
     return render(request, 'index.html', dict)
+
 
 
 def buystock(request):
@@ -42,12 +44,15 @@ def buystock(request):
 
             date = datetime.now().strftime('%Y-%m-%d')
             profit = Profit.objects.filter(date= date).first()
+            pre_profit = Profit.objects.last()
             if profit is None:
-                profit  = Profit(date=date)
+                profit  = Profit(date=date,pre_total=pre_profit.total,pre_cash=pre_profit.cash)
+            profit.cash = round((profit.pre_cash + profit.sellamount - profit.buyamount),3)
             profit.buyamount = profit.buyamount + record.amount
+            # profit_init()
             profit.save()
 
-    return redirect('trade')
+    return redirect('stocks:trade')
             # return HttpResponse('buy ok')
 
 
@@ -55,7 +60,7 @@ def trade(request):
     stock_form = StockinhandForm()
     buy_form = BuystockForm()
     sell_form = SellstockForm()
-    records = Record.objects.order_by('-date')[:30]
+    records = Record.objects.order_by('-id')[:30]
 
     content = {'stock_form': stock_form,
                'buy_form': buy_form,
@@ -89,15 +94,52 @@ def sellstock(request):
 
             date = datetime.now().strftime('%Y-%m-%d')
             profit = Profit.objects.filter(date=date).first()
-            pre_profit = Profit.objects.all().last()
+            pre_profit = Profit.objects.last()
             if profit is None:
-                profit = Profit(date=date,pre_total=pre_profit.total)
+                profit = Profit(date=date,pre_total=pre_profit.total,pre_cash=pre_profit.cash)
+
+            profit.cash = round((profit.pre_cash + profit.sellamount - profit.buyamount),3)
+            # profit_init()
             profit.sellamount = profit.sellamount + record.amount
             profit.save()
-    return redirect('trade')
+    return redirect('stocks:trade')
+
+
+def stock_inhand(request):
+    stocks = StcokInHand.objects.exclude(quantityinhand = 0).order_by('-ratio')
+
+    total_value = 0
+    for stock in stocks:
+        stock.save()
+        total_value = stock.value + total_value
+
+    date = datetime.now().strftime('%Y-%m-%d')
+    profit = Profit.objects.filter(date=date).first()
+    pre_profit = Profit.objects.last()
+    if profit is None:
+        profit = Profit(date=date, pre_total=pre_profit.total,pre_cash=pre_profit.cash)
+
+    profit.cash = round((profit.pre_cash + profit.sellamount - profit.buyamount),3)
+    # profit_init()
+    profit.value = total_value
+    profit.save()
+
+    return render(request,'stockinhand.html',{'stocks':stocks,'profit':profit})
+
+
+def stockdetail(request,code):
+    stock = get_object_or_404(StcokInHand, code=code)
+    records = Record.objects.filter(stock=stock)
+    content = {
+             'stock':stock,
+             'records':records,
+             }
+    return render(request,'stockdetail.html',content)
 
 
 
+def profit(request):
+    return HttpResponse('i will insert a page')
 
 
 
