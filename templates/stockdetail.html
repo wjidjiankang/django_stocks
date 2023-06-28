@@ -4,9 +4,16 @@
 Detail
 {% endblock %}
 
+{% block head %}
+    <style>
+     .div-left{float:left}
+
+    </style>
+{% endblock %}
+
 
 {% block content %}
-<h1>welcome，it just is a cover</h1>
+<h1>welcome，it just is an example</h1>
 <table>
     <tr>
         <td>代码</td>
@@ -63,6 +70,19 @@ Detail
 	  </tr>
 	{% endfor %}
    </table>
+    </div>
+    <br>
+    <p >
+    实时行情
+    </p>
+    <div class="div-left">
+        <img src = "http://image.sinajs.cn/newchart/min/n/{{ fullcode }}.gif" >
+    </div>
+    <div class="div-left">
+        <img src="http://image.sinajs.cn/newchart/daily/n/{{ fullcode }}.gif " >
+    </div>
+
+
 
 {% endblock %}
 

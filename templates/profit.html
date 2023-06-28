@@ -1,10 +1,203 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
 
-</body>
-</html>
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Pofit
+{% endblock %}
+
+{% block head %}
+{#   <script type="text/javascript" src="{% static 'js/echarts.min.js' %}"></script>#}
+      <script type="text/javascript" src="{% static 'js/echarts.min.js' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+
+    <h1>welcome，it just is an example</h1>
+
+
+<div id="test1" style="width: 800px;height:400px;"></div>
+
+     <script type="text/javascript">
+      // 基于准备好的dom，初始化echarts实例
+    var chartDom = document.getElementById('test1');
+    var myChart = echarts.init(chartDom);
+    var option;
+
+    var series_data = [];
+    var xAxis_data = [];
+
+    {% for profit in objs %}
+        series_data.push({{ profit.profit }})
+        {#注意这里的双引号#}
+        xAxis_data.push("{{ profit.date}}")
+    {% endfor %}
+
+
+option = {
+  tooltip: {
+    trigger: 'axis',
+    position: function (pt) {
+      return [pt[0], '10%'];
+    }
+  },
+  title: {
+    left: 'center',
+    text: 'Large Area Chart'
+  },
+  toolbox: {
+    feature: {
+      dataZoom: {
+        yAxisIndex: 'none'
+      },
+      restore: {},
+      saveAsImage: {}
+    }
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: xAxis_data
+  },
+  yAxis: {
+    type: 'value',
+    boundaryGap: [0, '5%']
+  },
+  dataZoom: [
+    {
+      type: 'inside',
+      start: 0,
+      end: 10
+    },
+    {
+      start: 0,
+      end: 10
+    }
+  ],
+  series: [
+    {
+      name: 'Fake Data',
+      type: 'line',
+      symbol: 'none',
+      sampling: 'lttb',
+      itemStyle: {
+        color: 'rgb(255, 70, 131)'
+      },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          {
+            offset: 0,
+            color: 'rgb(255, 158, 68)'
+          },
+          {
+            offset: 1,
+            color: 'rgb(255, 70, 131)'
+          }
+        ])
+      },
+      data: series_data
+    }
+  ]
+};
+
+myChart.setOption(option);
+</script>
+
+<div id="test2" style="width: 800px;height:400px;"></div>
+     <script type="text/javascript">
+
+      // 基于准备好的dom，初始化echarts实例
+      var myChart = echarts.init(document.getElementById('test2'));
+
+      // 指定图表的配置项和数据
+        var series_data = [];
+        var xAxis_data = [];
+
+      {% for profit in objs %}
+        series_data.push({{ profit.profit }})
+        {#注意这里的双引号#}
+        xAxis_data.push("{{ profit.date}}")
+        {% endfor %}
+
+      var option = {
+        title: {
+          text: 'ECharts 入门示例'
+        },
+        tooltip: {},
+        legend: {
+          data: ['销量']
+        },
+        xAxis: {
+          data: xAxis_data
+        },
+        yAxis: {},
+        series: [
+          {
+            name: '销量',
+            type: 'bar',
+            data:series_data
+          }
+        ]
+      };
+      // 使用刚指定的配置项和数据显示图表。
+      myChart.setOption(option);
+    </script>
+
+{% endblock %}
+
+
+{#    <script type="text/javascript">#}
+{#      // 基于准备好的dom，初始化echarts实例#}
+{#      var myChart = echarts.init(document.getElementById('main'));#}
+{##}
+{#      // 指定图表的配置项和数据#}
+{#        var series_data = [];#}
+{#        var xAxis_data = [];#}
+{##}
+{##}
+{#      {% for profit in objs %}#}
+{#        series_data.push({{ profit.profit }})#}
+        {#注意这里的双引号#}
+{#        xAxis_data.push("{{ profit.date}}")#}
+{#        {% endfor %}#}
+{##}
+{##}
+{#      var option = {#}
+{#        title: {#}
+{#          text: 'ECharts 入门示例'#}
+{#        },#}
+{#        tooltip: {},#}
+{#        legend: {#}
+{#          data: ['销量']#}
+{#        },#}
+{#        xAxis: {#}
+{#          data: xAxis_data#}
+{#        },#}
+{#        yAxis: {},#}
+{#        series: [#}
+{#          {#}
+{#            name: '销量',#}
+{#            type: 'bar',#}
+{#            data:series_data#}
+{#          }#}
+{#        ]#}
+{#      };#}
+{##}
+{#      // 使用刚指定的配置项和数据显示图表。#}
+{#      myChart.setOption(option);#}
+{#    </script>#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

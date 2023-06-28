@@ -2,7 +2,7 @@ from django.shortcuts import render,HttpResponse,redirect,get_object_or_404
 from .forms import BuystockForm,SellstockForm,StockinhandForm
 from .models import Record,StcokInHand,Profit
 from datetime import datetime
-from .myinfom import profit_init
+# from .myinfom import profit_init,MyStock
 
 # Create your views here.
 
@@ -130,16 +130,35 @@ def stock_inhand(request):
 def stockdetail(request,code):
     stock = get_object_or_404(StcokInHand, code=code)
     records = Record.objects.filter(stock=stock)
+    fullcode = ''
+    if stock.code[0]=='6' or stock.code[0]=='5':
+        fullcode = 'sh' + stock.code
+    elif stock.code[0] == '0' or stock.code[0] == '1' or stock.code[0] == '3':
+        fullcode = 'sz' + stock.code
+
+    # mystock = MyStock(stock.code)
+    # predict = 0
+    # try:
+    #     predict = mystock.cal_predict()
+    # except:
+    #     return HttpResponse("Can not predict the price of the stock!")
+    # stock.estimation = predict
+    # stock.save()
+
     content = {
              'stock':stock,
              'records':records,
+             'fullcode':fullcode
              }
     return render(request,'stockdetail.html',content)
 
 
 
 def profit(request):
-    return HttpResponse('i will insert a page')
+    objs = Profit.objects.all()
+
+    return render(request,'profit.html',locals())
+
 
 
 

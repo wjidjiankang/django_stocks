@@ -138,7 +138,7 @@ class Profit(models.Model):
     def save(self, *args, **kargs):
         self.date = datetime.now().strftime('%Y-%m-%d')
         self.total = round((self.value+self.cash),3)
-        self.profit = self.total - self.pre_total
+        self.profit = round((self.total - self.pre_total),3)
         super(Profit, self).save(*args, **kargs)
 
 
