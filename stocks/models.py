@@ -1,6 +1,7 @@
 from django.db import models
 import qstock as qs
 from datetime import datetime
+import akshare as ak
 
 # Create your models here.
 
@@ -37,6 +38,21 @@ class StcokInHand(models.Model):
 
     # def get_profit_ratio(self):
     #     ratio = self.profit
+    def get_estimation(self):
+        estimation = 0
+        try:
+            stock_profit_forecast_ths_df = ak.stock_profit_forecast_ths(symbol=self.code, indicator="预测年报每股收益")
+            n = len(stock_profit_forecast_ths_df)
+            if n>=2:
+                v2 = stock_profit_forecast_ths_df.iloc[n - 1]['均值']
+                v1 = stock_profit_forecast_ths_df.iloc[n - 2]['均值']
+                estimation = v1 * (v2 / v1 - 1) * 100
+            else:
+                estimation = 0
+        except :
+            estimation = 0
+        return estimation
+
 
     def save(self, *args, **kargs):
         stockinform = self.get_stock_inform()
@@ -50,6 +66,7 @@ class StcokInHand(models.Model):
         self.value = round((self.quantityinhand * self.close),3)
         self.profit_day = round((self.close-self.preclose)*self.quantityinhand, 3)
         self.profit_ratio = round((100*self.profit/self.buyamount), 3)
+        self.estimation = round(self.get_estimation(),2)
         super(StcokInHand, self).save(*args, **kargs)
 
     def __str__(self):

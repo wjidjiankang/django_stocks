@@ -160,6 +160,15 @@ def profit(request):
     return render(request,'profit.html',locals())
 
 
+def total(request):
+    objs = Profit.objects.all()
+    n = len(objs)
+    last_profit = objs[n-1]
+    # last_profitn = len()
+    total = last_profit.total
+    return HttpResponse('total is {}'.format(total))
+
+
 
 
 

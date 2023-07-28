@@ -12,4 +12,5 @@ urlpatterns = [
  # path('detail/(?P<code>)',views.stockdetail,name='stockdetail'),
  re_path(r'^detail/(?P<code>\d{6})/$', views.stockdetail, name='stockdetail'),
  path('profit/',views.profit,name='profit'),
+ path('total/',views.total,name='total'),
 ]
