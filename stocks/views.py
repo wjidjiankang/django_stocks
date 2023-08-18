@@ -47,8 +47,9 @@ def buystock(request):
             pre_profit = Profit.objects.last()
             if profit is None:
                 profit  = Profit(date=date,pre_total=pre_profit.total,pre_cash=pre_profit.cash)
-            profit.cash = round((profit.pre_cash + profit.sellamount - profit.buyamount),3)
+
             profit.buyamount = profit.buyamount + record.amount
+            profit.cash = round((profit.pre_cash + profit.sellamount - profit.buyamount), 3)
             # profit_init()
             profit.save()
 
@@ -97,10 +98,9 @@ def sellstock(request):
             pre_profit = Profit.objects.last()
             if profit is None:
                 profit = Profit(date=date,pre_total=pre_profit.total,pre_cash=pre_profit.cash)
-
-            profit.cash = round((profit.pre_cash + profit.sellamount - profit.buyamount),3)
             # profit_init()
             profit.sellamount = profit.sellamount + record.amount
+            profit.cash = round((profit.pre_cash + profit.sellamount - profit.buyamount), 3)
             profit.save()
     return redirect('stocks:trade')
 
