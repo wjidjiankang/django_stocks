@@ -142,7 +142,7 @@ class Record(models.Model):
         super(Record, self).save(*args, **kargs)
 
 class Profit(models.Model):
-    date  = models.CharField(max_length=10)
+    date = models.CharField(max_length=10)
     value = models.FloatField(default=0)
     buyamount = models.FloatField(default=0)
     sellamount = models.FloatField(default=0)
@@ -151,11 +151,12 @@ class Profit(models.Model):
     profit = models.FloatField(default=0)
     cash = models.FloatField(default=0)
     pre_cash = models.FloatField(default=0)
+    cash_change = models.FloatField(default=0)
 
     def save(self, *args, **kargs):
         self.date = datetime.now().strftime('%Y-%m-%d')
-        self.total = round((self.value+self.cash),3)
-        self.profit = round((self.total - self.pre_total),3)
+        # self.total = round((self.value + self.cash), 3)
+        # self.profit = round((self.total - self.pre_total), 3)
         super(Profit, self).save(*args, **kargs)
 
 
