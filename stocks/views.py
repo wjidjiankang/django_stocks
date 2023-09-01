@@ -3,6 +3,7 @@ from .forms import BuystockForm, SellstockForm, StockinhandForm
 from .models import Record, StcokInHand, Profit
 from datetime import datetime
 # from .myinfom import profit_init,MyStock
+from decimal import Decimal
 
 # Create your views here.
 
@@ -17,16 +18,14 @@ def buystock(request):
     # if request.method=="GET":
     stock_form = StockinhandForm()
     buy_form = BuystockForm()
-    # return render(request, 'trade.html', {'stock_form': stock_form,'buy_form':buy_form})
+
     if request.method == "POST":
         stock_form = StockinhandForm(request.POST)
         buy_form = BuystockForm(request.POST)
-        print('1')
+
         if stock_form.is_valid() and buy_form.is_valid():
-            print("2")
             stock = StcokInHand.objects.filter(code=stock_form.data['code']).first()
-            print("3")
-            print('4')
+
             if stock is None:
                 print(stock_form.data['code'])
                 stock = StcokInHand(code=stock_form.data['code'])
@@ -37,8 +36,8 @@ def buystock(request):
             record.mark = 'buy'
             record.save()
 
-            stock.buyquantity = float(stock.buyquantity) + float(record.quantity)
-            stock.buyamount = float(stock.buyamount) + float(record.amount)
+            stock.buyquantity = stock.buyquantity + record.quantity
+            stock.buyamount = stock.buyamount + Decimal(record.amount)
             stock.save()
 
             date = datetime.now().strftime('%Y-%m-%d')
@@ -48,17 +47,13 @@ def buystock(request):
             len_profits = len(profits)
             pre_profit = profits[len_profits-2]
             cash_pre = pre_profit.cash
-            # print(cash_pre)
-            # pre_profit = Profit.objects.last()
-            # cash_pre = pre_profit.cash
-            # print(cash_pre)
 
             if profit is None:
-                # profit = Profit(date=date,pre_total=pre_profit.total,pre_cash=pre_profit.cash)
                 profit = Profit(date=date)
+
             profit.cash_change = profit.cash_change - record.amount
-            profit.cash = round((cash_pre + profit.cash_change), 3)
-            # profit_init()
+            profit.cash = cash_pre + profit.cash_change
+
             profit.save()
 
     return redirect('stocks:trade')
@@ -74,7 +69,7 @@ def trade(request):
     content = {'stock_form': stock_form,
                'buy_form': buy_form,
                'sell_form': sell_form,
-               'records':records
+               'records': records
                }
     return render(request, 'trade.html', content)
 
@@ -84,9 +79,7 @@ def sellstock(request):
     buy_form = BuystockForm()
     sell_form = SellstockForm()
 
-    # return render(request, 'trade.html', content)
     if request.method == "POST":
-
         stock_form = StockinhandForm(request.POST)
         sell_form = SellstockForm(request.POST)
         if stock_form.is_valid() and sell_form.is_valid():
@@ -107,15 +100,12 @@ def sellstock(request):
             len_profits = len(profits)
             pre_profit = profits[len_profits-2]
             cash_pre = pre_profit.cash
-            # print(cash_pre)
 
             if profit is None:
-                # profit = Profit(date=date,pre_total=pre_profit.total,pre_cash=pre_profit.cash)
                 profit = Profit(date=date)
-            # profit_init()
+
             profit.cash_change = profit.cash_change + record.amount
-            # profit.sellamount = profit.sellamount + record.amount
-            profit.cash = round((cash_pre + profit.cash_change), 3)
+            profit.cash = cash_pre + profit.cash_change
             profit.save()
     return redirect('stocks:trade')
 
@@ -136,16 +126,14 @@ def stock_inhand(request):
     pre_profit = profits[len_profits - 2]
     cash_pre = pre_profit.cash
     total_pre = pre_profit.total
-    # print(cash_pre,total_pre)
 
     if profit is None:
-        profit = Profit(date=date, pre_total=pre_profit.total, pre_cash=pre_profit.cash)
+        profit = Profit(date=date)
 
-    profit.cash = round((cash_pre + profit.cash_change), 3)
-    # profit_init()
+    profit.cash = cash_pre + profit.cash_change
     profit.value = total_value
-    profit.total = profit.value + profit.cash
-    profit.profit = round((profit.total - total_pre), 3)
+    profit.total = Decimal(profit.value) + profit.cash
+    profit.profit = profit.total - total_pre
     profit.save()
 
     return render(request, 'stockinhand.html', {'stocks': stocks, 'profit': profit})
@@ -159,15 +147,6 @@ def stockdetail(request, code):
         fullcode = 'sh' + stock.code
     elif stock.code[0] == '0' or stock.code[0] == '1' or stock.code[0] == '3':
         fullcode = 'sz' + stock.code
-
-    # mystock = MyStock(stock.code)
-    # predict = 0
-    # try:
-    #     predict = mystock.cal_predict()
-    # except:
-    #     return HttpResponse("Can not predict the price of the stock!")
-    # stock.estimation = predict
-    # stock.save()
 
     content = {
              'stock': stock,

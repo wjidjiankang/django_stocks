@@ -1,6 +1,6 @@
 from django.forms import Form,ModelForm
 from django import forms
-from .models import Record,StcokInHand
+from .models import Record, StcokInHand
 
 
 class StockinhandForm(ModelForm):
@@ -12,23 +12,23 @@ class StockinhandForm(ModelForm):
 
 
 class BuystockForm(ModelForm):
-    price = forms.FloatField()
+    price = forms.DecimalField()
     quantity = forms.IntegerField()
 
     class Meta:
         model = Record
-        fields = ('price','quantity')
+        fields = ('price', 'quantity')
 
 
 
 
 class SellstockForm(ModelForm):
-    price = forms.FloatField()
+    price = forms.DecimalField()
     quantity = forms.IntegerField()
 
     class Meta:
         model = Record
-        fields = ('price','quantity' )
+        fields = ('price', 'quantity' )
 
 
 
