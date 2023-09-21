@@ -2,13 +2,11 @@ from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from .forms import BuystockForm, SellstockForm, StockinhandForm
 from .models import Record, StcokInHand, Profit
 from datetime import datetime
-# from .myinfom import profit_init,MyStock
 from decimal import Decimal
 
-# Create your views here.
+
 
 def index(request):
-    # return HttpResponse('hello')
     dict = {'name': 'peter'}
     return render(request, 'index.html', dict)
 

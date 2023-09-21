@@ -14,7 +14,7 @@ class StcokInHand(models.Model):
     ratio = models.FloatField(default=0)
     preclose = models.DecimalField(max_digits=8, decimal_places=3, default=0)
     buyquantity = models.IntegerField(default=0)
-    buyamount = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    buyamount = models.DecimalField(max_digits=11, decimal_places=2, default=1)
     sellquantity = models.IntegerField(default=0)
     sellamount = models.DecimalField(max_digits=11, decimal_places=2, default=0)
     quantityinhand = models.IntegerField()
@@ -62,7 +62,7 @@ class StcokInHand(models.Model):
         self.profit = round(self.close * self.quantityinhand + self.sellamount - self.buyamount, 2)
         self.value = round(self.quantityinhand * self.close, 2)
         self.profit_day = round((self.close-self.preclose) * self.quantityinhand, 2)
-        self.profit_ratio = 100*self.profit / self.buyamount
+        self.profit_ratio = 100*self.profit/self.buyamount
         self.estimation = self.get_estimation()
         super(StcokInHand, self).save(*args, **kargs)
 
@@ -75,7 +75,7 @@ class Record(models.Model):
     stock = models.ForeignKey(StcokInHand, on_delete=models.CASCADE, related_name='stock_code', null=True, blank=True, default=None)
     mark = models.CharField(max_length=4)
     quantity = models.IntegerField(default=0)
-    price = models.DecimalField(max_digits=8, decimal_places=3, default=0)
+    # price = models.DecimalField(max_digits=8, decimal_places=3, default=0)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     date = models.CharField(max_length=10)
 
@@ -140,7 +140,7 @@ class Record(models.Model):
         return Decimal(ammount)
 
     def save(self, *args, **kargs):
-        self.amount = self.get_ammount()
+        # self.amount = self.get_ammount()
         self.date = datetime.now().strftime('%Y-%m-%d')
         super(Record, self).save(*args, **kargs)
 

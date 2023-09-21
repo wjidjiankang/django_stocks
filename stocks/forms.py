@@ -12,23 +12,23 @@ class StockinhandForm(ModelForm):
 
 
 class BuystockForm(ModelForm):
-    price = forms.DecimalField()
+    amount = forms.DecimalField()
     quantity = forms.IntegerField()
 
     class Meta:
         model = Record
-        fields = ('price', 'quantity')
+        fields = ('amount', 'quantity')
 
 
 
 
 class SellstockForm(ModelForm):
-    price = forms.DecimalField()
+    amount = forms.DecimalField()
     quantity = forms.IntegerField()
 
     class Meta:
         model = Record
-        fields = ('price', 'quantity' )
+        fields = ('amount', 'quantity' )
 
 
 

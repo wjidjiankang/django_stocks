@@ -20,8 +20,8 @@ Trade
              <td>{{ stock_form.code }}</td>
          </tr>
          <tr>
-             <td>股票价格：</td>
-             <td>{{ buy_form.price }}</td>
+             <td>股票金额：</td>
+             <td>{{ buy_form.amount }}</td>
          </tr>
          <tr>
              <td>股票数量：</td>
@@ -46,8 +46,8 @@ Trade
              <td>{{ stock_form.code }}</td>
          </tr>
          <tr>
-             <td>股票价格：</td>
-             <td>{{ sell_form.price }}</td>
+             <td>股票金额：</td>
+             <td>{{ sell_form.amount }}</td>
          </tr>
          <tr>
              <td>股票数量：</td>
@@ -71,7 +71,7 @@ Trade
 		  <th>股票名称</th>
 		  <th>操作</th>
 		  <th>数量</th>
-		  <th>价格</th>
+<!--		  <th>价格</th>-->
 		  <th>金额</th>
 	  </tr>
 	{% for item in records %}
@@ -81,7 +81,7 @@ Trade
 		   <td><a  href="{% url 'stocks:stockdetail' item.stock.code %}" > {{ item.stock.name }} </a></td>
 		  <td>{{ item.mark }}</td>
 		  <td>{{ item.quantity }}</td>
-		  <td>{{ item.price }}</td>
+<!--		  <td>{{ item.price }}</td>-->
 		  <td>{{ item.amount }}</td>
 	  </tr>
 	{% endfor %}
