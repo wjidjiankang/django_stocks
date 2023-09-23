@@ -15,6 +15,13 @@ class BuystockForm(ModelForm):
     amount = forms.DecimalField()
     quantity = forms.IntegerField()
 
+    CHOICES = (
+        ('buy', '买入'),
+        ('send', '送股'),
+    )
+    my_choice = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect(attrs={'layout': 'horizontal'}),
+                                  initial='buy')
+
     class Meta:
         model = Record
         fields = ('amount', 'quantity')
@@ -25,6 +32,13 @@ class BuystockForm(ModelForm):
 class SellstockForm(ModelForm):
     amount = forms.DecimalField()
     quantity = forms.IntegerField()
+
+    CHOICES = (
+        ('sell', '卖出'),
+        ('dive', '分红'),
+    )
+    my_choice = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect(attrs={'layout': 'horizontal'}),
+                                  initial='sell')
 
     class Meta:
         model = Record

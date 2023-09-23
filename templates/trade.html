@@ -27,14 +27,31 @@ Trade
              <td>股票数量：</td>
              <td>{{ buy_form.quantity }}</td>
          </tr>
-         <tr>
-             <td> </td>
-             <td><input type="submit" name="bconfirm" value="买入" />&nbsp;&nbsp;</td>
-         </tr>
 
 
      </table>
+
+      <div>
+        <input type="radio" id="buy" name="tade_radio" value="buy" checked />
+        <label for="buy">买入</label>
+
+        <input type="radio" id="sell" name="tade_radio" value="sell" />
+        <label for="sell">卖出</label>
+
+        <input type="radio" id="send" name="tade_radio" value="send" />
+        <label for="send">送股</label>
+
+        <input type="radio" id="dividend" name="tade_radio" value="divi" />
+        <label for="dividend">分红</label>
+      </div>
+     <div>
+         {{ buy_form.my_choice}}
+     </div>
+
+    <input style="position: absolute;left:100px"     type="submit" name="bconfirm" value="交易" />
  </form>
+
+
 <br>
 <br>
 <form name="sellForm"  action="/sellstock/"  method="POST">
@@ -57,6 +74,7 @@ Trade
              <td> </td>
              <td> <input type="submit" name="bconfirm" value="卖出" />&nbsp;&nbsp;&nbsp;&nbsp;</td>
          </tr>
+            {{ sell_form.my_choice}}
      </table>
 
 
@@ -71,7 +89,7 @@ Trade
 		  <th>股票名称</th>
 		  <th>操作</th>
 		  <th>数量</th>
-<!--		  <th>价格</th>-->
+		  <th>价格</th>
 		  <th>金额</th>
 	  </tr>
 	{% for item in records %}
@@ -81,7 +99,7 @@ Trade
 		   <td><a  href="{% url 'stocks:stockdetail' item.stock.code %}" > {{ item.stock.name }} </a></td>
 		  <td>{{ item.mark }}</td>
 		  <td>{{ item.quantity }}</td>
-<!--		  <td>{{ item.price }}</td>-->
+		  <td>{{ item.price }}</td>
 		  <td>{{ item.amount }}</td>
 	  </tr>
 	{% endfor %}

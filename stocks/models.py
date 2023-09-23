@@ -75,7 +75,7 @@ class Record(models.Model):
     stock = models.ForeignKey(StcokInHand, on_delete=models.CASCADE, related_name='stock_code', null=True, blank=True, default=None)
     mark = models.CharField(max_length=4)
     quantity = models.IntegerField(default=0)
-    # price = models.DecimalField(max_digits=8, decimal_places=3, default=0)
+    price = models.DecimalField(max_digits=8, decimal_places=3, default=0)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     date = models.CharField(max_length=10)
 
