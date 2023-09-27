@@ -1,13 +1,20 @@
 from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from .forms import BuystockForm, SellstockForm, StockinhandForm
-from .models import Record, StcokInHand, Profit
+from .models import Record, StcokInHand, Profit, LowMarkerCap, Para
 from datetime import datetime
 from decimal import Decimal
-
+import akshare as ak
+import pandas as pd
+import qstock as qs
+import matplotlib.pyplot  as plt
+from io import BytesIO
+import base64
+import imp
 
 
 def index(request):
-    dict = {'name': 'peter'}
+    dict = {'name': 'peter',
+           }
     return render(request, 'index.html', dict)
 
 
@@ -20,23 +27,39 @@ def buystock(request):
     if request.method == "POST":
         stock_form = StockinhandForm(request.POST)
         buy_form = BuystockForm(request.POST)
+        mark = request.POST.get('buy_radio')
+        strategy = request.POST.get('stategy')
 
         if stock_form.is_valid() and buy_form.is_valid():
             stock = StcokInHand.objects.filter(code=stock_form.data['code']).first()
 
             if stock is None:
-                print(stock_form.data['code'])
+                # print(stock_form.data['code'])
                 stock = StcokInHand(code=stock_form.data['code'])
                 stock.save()
 
             record = buy_form.save(commit=False)
             record.stock = stock
-            record.mark = 'buy'
+            record.price = record.amount / record.quantity
+            record.mark = mark
+            # print(record.price)
+            # print(record.mark)
             record.save()
 
             stock.buyquantity = stock.buyquantity + record.quantity
             stock.buyamount = stock.buyamount + Decimal(record.amount)
+            # stock.strategy = strategy
+            # print(stock.strategy)
             stock.save()
+
+            # 把策略的信息存入数据库
+            if strategy =='lmup':
+                code = Para(flag='lmup_code', string=stock.code)
+                code.save()
+                cash = Para.objects.filter(flag='lmup_cash').first()
+                print(cash)
+                cash.value = cash.value - record.amount
+                cash.save()
 
             date = datetime.now().strftime('%Y-%m-%d')
             profit = Profit.objects.filter(date=date).first()
@@ -80,16 +103,32 @@ def sellstock(request):
     if request.method == "POST":
         stock_form = StockinhandForm(request.POST)
         sell_form = SellstockForm(request.POST)
+        mark = request.POST.get('sell_radio')
+        strategy = request.POST.get('stategys')
         if stock_form.is_valid() and sell_form.is_valid():
             stock = StcokInHand.objects.filter(code=stock_form.data['code']).first()
             record = sell_form.save(commit=False)
             record.stock = stock
-            record.mark = 'sell'
+            record.mark = mark
+            if mark == 'sell':
+                record.price = record.amount / record.quantity
+            elif mark == 'divi':
+                record.price = 0
             record.save()
 
             stock.sellquantity = stock.sellquantity + record.quantity
             stock.sellamount = stock.sellamount + record.amount
+            if stock.buyquantity == stock.sellquantity:
+                stock.strategy =''
             stock.save()
+
+            # 策略code删除，cash 更新
+            if strategy =='lmup':
+                code = Para.objects.filter(flag='lmup_code', string=stock.code)
+                code.delete()
+                cash = Para.objects.filter(flag='lmup_cash').first()
+                cash.value = cash.value + record.amount
+                cash.save()
 
             date = datetime.now().strftime('%Y-%m-%d')
             profit = Profit.objects.filter(date=date).first()
@@ -169,10 +208,107 @@ def total(request):
     return HttpResponse('total is {}'.format(total))
 
 
+def get_market_cap(marketup=2000000000):
+    stock_zh_a_spot_em_df = ak.stock_zh_a_spot_em()
+    stock_df = stock_zh_a_spot_em_df[['代码', '名称', '总市值']].sort_values('总市值')
+    stock_df.rename(columns={'代码': 'code', '名称': 'name', '总市值': 'marketcap'}, inplace=True)
+    market = stock_df[stock_df['marketcap'] > marketup]
+    marketup = market.iloc[:10]
+        # print(stock_df)
+        # print(market)
+        # print(marketup)
+    return marketup
 
 
+def lowmarketcap(request):
+    low_market_cap_df = get_market_cap()
+    table = low_market_cap_df.to_html(index=False)
+    benchmark_300 = 3692.89
+    benchmark_total = 15000
+    # cash= 15000
 
+    # 从数据库读取 cash
+    cash_obj = Para.objects.filter(flag='lmup_cash').first()
+    # print(cash_obj.flag)
+    cash = cash_obj.value
+    # with open('cash.txt','r') as f:
+    #     data = f.readlines()
+    # # print(data)
+    # data = data[0].strip()
+    # # print(data)
+    # cash = int(data)
+    # # print(cash)
 
+    # 获取沪深300的数据
+    stock_300 = qs.realtime_data(code='000300')
+    close_300 = stock_300['最新'].values[0]
+    ratio_300 = close_300/benchmark_300 -1
+
+    # 策略里面股票的收盘价
+    values = 0
+    lmup_stocks = Para.objects.filter(flag='lmup_code')
+    for stock in lmup_stocks:
+        code = stock.string
+        obj = StcokInHand.objects.filter(code=code).first()
+        values = values + obj.value
+    # strategy_stocks = StcokInHand.objects.filter(strategy='lmup')
+    # values= 0
+    # buyamount = 0
+    # sellmount = 0
+    # for stock in strategy_stocks:
+    #     values = values + stock.value
+    #     buyamount = buyamount + stock.buyamount
+    #     sellmount = sellmount + stock.sellamount
+    total = values + cash
+    value_ratio = total/benchmark_total -1
+    print(value_ratio)
+
+    # date = datetime.now().strftime('%Y-%m-%d')
+    date = datetime.today().date()
+    print(date)
+    # print(type(date))
+
+    #数据存入数据库
+    lmarketcap = LowMarkerCap.objects.filter(date=date).first()
+    if lmarketcap is None:
+        lmarketcap= LowMarkerCap(date=date)
+    lmarketcap.bench300 = close_300
+    lmarketcap.value = total
+    lmarketcap.value_ratio = value_ratio
+    lmarketcap.bench_ratio = ratio_300
+    lmarketcap.save()
+
+    # dates=[]
+    # ratio_300s=[]
+    # ratio_strategy=[]
+
+    # objs = LowMarkerCap.objects.all()
+    # for lmcap in lmarketcaps:
+    #     dates.append(lmcap.date)
+    #     ratio_300s.append(lmcap.bench300)
+    #     ratio_strategy.append(lmcap.value)
+    # print(dates)
+    # print(ratio_strategy)
+
+    # # # fig, ax = plt.subplots(111)
+    # plt.plot(dates, ratio_300s,'r')
+    # plt.plot(dates, ratio_strategy,'b')
+    # # buffer = BytesIO()
+    # # plt.savefig(buffer)
+    # # plt.close()
+    # # base64img = base64.b64encode(buffer.getvalue())
+    # # img = 'data:image/png;base64,'+base64img.decode()
+    # plt.savefig('my_plot.png', bbox_inches='tight', pad_inches=0)
+    # plt.close()
+    #
+    # # with open('my_plot.png','rb') as file:
+    # #     plot_data = file.read()
+    #
+    content = {'cash': cash,
+               'table': table,
+               'benvalue': benchmark_total,
+               }
+    return render(request, 'lowmarketcap.html', context=content)
 
 
     # if request.method =='POST':

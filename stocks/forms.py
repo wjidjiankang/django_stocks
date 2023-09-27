@@ -1,4 +1,4 @@
-from django.forms import Form,ModelForm
+from django.forms import Form,ModelForm,Select
 from django import forms
 from .models import Record, StcokInHand
 
@@ -15,12 +15,19 @@ class BuystockForm(ModelForm):
     amount = forms.DecimalField()
     quantity = forms.IntegerField()
 
-    CHOICES = (
-        ('buy', '买入'),
-        ('send', '送股'),
-    )
-    my_choice = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect(attrs={'layout': 'horizontal'}),
-                                  initial='buy')
+    # CHOICES_radio = (
+    #     ('buy', '买入'),
+    #     ('send', '送股'),
+    # )
+    #
+    # CHOICES_select = (
+    #     ('1', ''),
+    #     ('2', 'ttxs'),
+    #     ('3', 'yyds'),
+    # )
+    # my_choice_radio = forms.ChoiceField(choices=CHOICES_radio, widget=forms.RadioSelect(attrs={'layout': 'horizontal'}),
+    #                               initial='buy')
+    # my_choice_select = forms.ChoiceField(choices=CHOICES_select, widget=Select())
 
     class Meta:
         model = Record
@@ -33,12 +40,12 @@ class SellstockForm(ModelForm):
     amount = forms.DecimalField()
     quantity = forms.IntegerField()
 
-    CHOICES = (
-        ('sell', '卖出'),
-        ('dive', '分红'),
-    )
-    my_choice = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect(attrs={'layout': 'horizontal'}),
-                                  initial='sell')
+    # CHOICES = (
+    #     ('sell', '卖出'),
+    #     ('dive', '分红'),
+    # )
+    # my_choice = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect(attrs={'layout': 'horizontal'}),
+    #                               initial='sell')
 
     class Meta:
         model = Record

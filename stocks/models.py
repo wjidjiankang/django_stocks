@@ -23,6 +23,7 @@ class StcokInHand(models.Model):
     value = models.DecimalField(max_digits=11, decimal_places=2, default=0)   # 市值
     profit_day = models.DecimalField(max_digits=11, decimal_places=2, default=0)  # 当日收益
     profit_ratio = models.FloatField(default=0, blank=True, null=True)
+    strategy = models.CharField(max_length=20,default='2')
 
     def get_stock_inform(self):
         stock = qs.realtime_data(code=self.code)
@@ -156,4 +157,28 @@ class Profit(models.Model):
     def save(self, *args, **kargs):
         self.date = datetime.now().strftime('%Y-%m-%d')
         super(Profit, self).save(*args, **kargs)
+
+class LowMarkerCap(models.Model):
+    date = models.DateField()
+    bench300 = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    value = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    bench_ratio = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    value_ratio = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+
+    # def get_bench300(self):
+    #     stock = qs.realtime_data(code='000300')
+    #     index =  stock['最新'].values[0]
+    #     return index
+
+
+    # def save(self, *args, **kargs):
+    #     self.bench300 = self.get_bench300()
+    #     self.date = datetime.now().strftime('%Y-%m-%d')
+    #     super(LowMarkerCap, self).save(*args, **kargs)
+
+class Para(models.Model):
+    flag = models.CharField(max_length=15)
+    value = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    string = models.CharField(max_length=15)
+
 

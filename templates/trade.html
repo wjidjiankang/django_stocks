@@ -6,7 +6,18 @@ Trade
 {% endblock %}
 
 
+<head>
+    <style>
+        .container {
+                display: flex; /* 使用 Flex 布局 */
+                    }
 
+        .item {
+                flex: 1; /* 使每个标签具有相同的宽度 */
+                margin-right: 10px; /* 可以根据需要设置标签之间的间距 */
+                }
+    </style>
+</head>
 
 
 {% block content %}
@@ -28,32 +39,41 @@ Trade
              <td>{{ buy_form.quantity }}</td>
          </tr>
 
-
      </table>
 
-      <div>
-        <input type="radio" id="buy" name="tade_radio" value="buy" checked />
-        <label for="buy">买入</label>
 
-        <input type="radio" id="sell" name="tade_radio" value="sell" />
-        <label for="sell">卖出</label>
 
-        <input type="radio" id="send" name="tade_radio" value="send" />
-        <label for="send">送股</label>
 
-        <input type="radio" id="dividend" name="tade_radio" value="divi" />
-        <label for="dividend">分红</label>
-      </div>
-     <div>
-         {{ buy_form.my_choice}}
+     <div class="container" style="display:flex;margin-right: 200px">
+         <div>
+            <input type="radio" id="buy_radio" name="buy_radio" value="buy" checked />
+            <label for="buy">买入</label>
+
+            <input type="radio" id="send_radio" name="buy_radio" value="send" />
+            <label for="send">送股</label>
+
+        </div>
+        <div  style="position: absolute;left:150px">
+             <select name="stategy">
+                    <option value="">-请选择-</option>
+                    <option value="lmup">低市值</option>
+                    <option value="hipe">hipe</option>
+                    <option value="lowpe">lowpe</option>
+            </select>
+        </div>
+
      </div>
 
+<!--        <div>{{buy_form.my_choice_radio}}</div>-->
+<!--        <div>{{buy_form.my_choice_select}}</div>-->
+<!--     </div>-->
     <input style="position: absolute;left:100px"     type="submit" name="bconfirm" value="交易" />
  </form>
 
 
 <br>
 <br>
+
 <form name="sellForm"  action="/sellstock/"  method="POST">
         {% csrf_token %}
 
@@ -70,15 +90,35 @@ Trade
              <td>股票数量：</td>
              <td>{{ sell_form.quantity }}</td>
          </tr>
-         <tr>
-             <td> </td>
-             <td> <input type="submit" name="bconfirm" value="卖出" />&nbsp;&nbsp;&nbsp;&nbsp;</td>
-         </tr>
-            {{ sell_form.my_choice}}
+
      </table>
 
 
+    <div class="container" style="display:flex;margin-right: 200px">
+    <div>
+        <input type="radio" id="sell" name="sell_radio" value="sell" checked/>
+        <label for="sell">卖出</label>
+
+        <input type="radio" id="dividend" name="sell_radio" value="divi" />
+        <label for="dividend">分红</label>
+      </div>
+            <div  style="position: absolute;left:150px">
+             <select name="stategys">
+                    <option value="">-请选择-</option>
+                    <option value="lmup">低市值</option>
+                    <option value="hipe">hipe</option>
+                    <option value="lowpe">lowpe</option>
+            </select>
+        </div>
+    </div>
+
+
+    <div>
+        <input style="position: absolute;left:100px" type="submit" name="bconfirm" value="卖出" />
+    </div>
 </form>
+    <br>
+<br>
 
 
 <div class='table_record' style="text-align: center;">
@@ -108,3 +148,5 @@ Trade
 
 
 {% endblock %}
+
+

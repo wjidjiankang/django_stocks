@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Detail
+{% endblock %}
+
+{% block head %}
+    <style>
+     .div-left{float:left}
+
+    </style>
+{% endblock %}
+
+
+{% block content %}
+<h1>小市值的股票</h1>
+<h3>还有现金{{cash}}</h3>
+<div>
+    {{table|safe}}
+</div>
+<br>
+
+
+<div>
+<!--    <img src="{{img}}">-->
+<!--    <img src="my_plot.png" >-->
+</div>
+
+
+{% endblock %}
+
+
+
