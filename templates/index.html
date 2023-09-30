@@ -6,9 +6,15 @@ Index
 
 
 {% block content %}
-<h1>welcome，it just is a cover</h1>
-{#<a  href="{% url 'stocks:detail/{{ stock.code }}' %}" >持仓</a>#}
-{{ table | safe }}
+    <h1>welcome，it just is a cover </h1>
+    {#<a  href="{% url 'stocks:detail/{{ stock.code }}' %}" >持仓</a>#}
+    <h3>一些小市值的股票,现金{{cash}}可挥霍:今天{{low_market_tip}}</h3>
+
+    <div>
+        {{ table | safe }}
+    </div>
+
+
 {% endblock %}
 
 

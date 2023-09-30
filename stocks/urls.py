@@ -14,4 +14,5 @@ urlpatterns = [
  path('profit/',views.profit,name='profit'),
  path('total/',views.total,name='total'),
  path('lowmarketcap/', views.lowmarketcap, name='lowmarketcap'),
+ path('totalbench/', views.totalbench, name='totalbench'),
 ]

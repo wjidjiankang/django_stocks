@@ -1,19 +1,72 @@
 from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from .forms import BuystockForm, SellstockForm, StockinhandForm
-from .models import Record, StcokInHand, Profit, LowMarkerCap, Para
-from datetime import datetime
+from .models import Record, StcokInHand, Profit, LowMarkerCap, Para, Partfolio300, Mydate
+from datetime import datetime, date ,timedelta
 from decimal import Decimal
 import akshare as ak
 import pandas as pd
 import qstock as qs
-import matplotlib.pyplot  as plt
+# import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
 import imp
+import matplotlib
+from matplotlib import pyplot as plt
+import matplotlib.dates as mdates
 
 
 def index(request):
-    dict = {'name': 'peter',
+    #获取交易日期的信息
+    import akshare as ak
+    tool_trade_date_hist_sina_df = ak.tool_trade_date_hist_sina()
+    # print(tool_trade_date_hist_sina_df)
+    # date = tool_trade_date_hist_sina_df.iloc[0, 0]
+    # print(date)
+    # print(type(date))
+    # today = datetime.today().date()
+    # print(today)
+
+    # 市值在20亿附近的股票list
+    low_market_cap_df = get_market_cap()
+    table = low_market_cap_df.to_html(index=False)
+
+    # 组合还有多少现金
+    cash_obj = Para.objects.filter(flag='lmup_cash').first()
+    cash = cash_obj.value
+
+    # 一天只处理一次，实现天数的累积
+    today = date.today()
+    before_day = today - timedelta(days=5)
+    print(before_day)
+    data_today = Mydate.objects.filter(date=today, is_processed=False).first()
+
+    if data_today is None:
+        new_data = Mydate(date=today)
+        # 在这里添加你需要处理的数据
+        # ...
+        new_data.is_processed = True
+        new_data.save()
+        if today in tool_trade_date_hist_sina_df['trade_date'].values:
+            print('a')
+            para = Para.objects.filter(flag='lmup_date').first()
+            para.value = para.value + 1
+            para.save()
+        # elif before_day in tool_trade_date_hist_sina_df['trade_date'].values:
+        #     print('b')
+    else:
+        pass
+
+    # 判断是否可以调仓
+    para = Para.objects.filter(flag='lmup_date').first()
+    days = para.value
+    if days % 10 == 0 :
+        low_market_tip = 'LMCAP 可以换以一下了'
+    else:
+        low_market_tip = 'LMCAP 再等等'
+
+    dict = {'table': table,
+            'cash': cash,
+            'low_market_tip':low_market_tip,
            }
     return render(request, 'index.html', dict)
 
@@ -194,9 +247,17 @@ def stockdetail(request, code):
 
 
 def profit(request):
-    objs = Profit.objects.all()
+    profits = Profit.objects.all()
+    make_lowmarket_cap_data()
+    bench2lmcap = LowMarkerCap.objects.all()
+    make_total_bench_data()
+    bench2total = Partfolio300.objects.all()
 
-    return render(request, 'profit.html', locals())
+    context={'profits': profits,
+             'bench2lmcap': bench2lmcap,
+             'bench2total': bench2total,}
+
+    return render(request, 'profit.html', context)
 
 
 def total(request):
@@ -221,8 +282,7 @@ def get_market_cap(marketup=2000000000):
 
 
 def lowmarketcap(request):
-    low_market_cap_df = get_market_cap()
-    table = low_market_cap_df.to_html(index=False)
+
     benchmark_300 = 3692.89
     benchmark_total = 15000
     # cash= 15000
@@ -240,32 +300,22 @@ def lowmarketcap(request):
     # # print(cash)
 
     # 获取沪深300的数据
-    stock_300 = qs.realtime_data(code='000300')
-    close_300 = stock_300['最新'].values[0]
+    close_300 = get300index()
     ratio_300 = close_300/benchmark_300 -1
 
-    # 策略里面股票的收盘价
+    # 策略里面股票的收盘价,市值
     values = 0
     lmup_stocks = Para.objects.filter(flag='lmup_code')
     for stock in lmup_stocks:
         code = stock.string
         obj = StcokInHand.objects.filter(code=code).first()
         values = values + obj.value
-    # strategy_stocks = StcokInHand.objects.filter(strategy='lmup')
-    # values= 0
-    # buyamount = 0
-    # sellmount = 0
-    # for stock in strategy_stocks:
-    #     values = values + stock.value
-    #     buyamount = buyamount + stock.buyamount
-    #     sellmount = sellmount + stock.sellamount
     total = values + cash
     value_ratio = total/benchmark_total -1
-    print(value_ratio)
+    # print(value_ratio)
 
-    # date = datetime.now().strftime('%Y-%m-%d')
     date = datetime.today().date()
-    print(date)
+    # print(date)
     # print(type(date))
 
     #数据存入数据库
@@ -278,38 +328,206 @@ def lowmarketcap(request):
     lmarketcap.bench_ratio = ratio_300
     lmarketcap.save()
 
-    # dates=[]
-    # ratio_300s=[]
-    # ratio_strategy=[]
+    # 画图
+    dates = []
+    benchs = []
+    strategys = []
+    returns = LowMarkerCap.objects.all()
+    for ret in returns:
+        dates.append(ret.date)
+        benchs.append(ret.bench_ratio)
+        strategys.append(ret.value_ratio)
+    # print(dates[0])
 
-    # objs = LowMarkerCap.objects.all()
-    # for lmcap in lmarketcaps:
-    #     dates.append(lmcap.date)
-    #     ratio_300s.append(lmcap.bench300)
-    #     ratio_strategy.append(lmcap.value)
-    # print(dates)
-    # print(ratio_strategy)
+    matplotlib.use('Agg')    #一定要这句。不然会报错
+    fig,ax = plt.subplots(figsize=(8, 4))
+    # fig = plt.figure(figsize=(9, 4))
+    # 画布边缘设置颜色
+    fig.patch.set_facecolor('white')
+    fig.patch.set_alpha(0.1)
 
-    # # # fig, ax = plt.subplots(111)
-    # plt.plot(dates, ratio_300s,'r')
-    # plt.plot(dates, ratio_strategy,'b')
-    # # buffer = BytesIO()
-    # # plt.savefig(buffer)
-    # # plt.close()
-    # # base64img = base64.b64encode(buffer.getvalue())
-    # # img = 'data:image/png;base64,'+base64img.decode()
-    # plt.savefig('my_plot.png', bbox_inches='tight', pad_inches=0)
-    # plt.close()
-    #
-    # # with open('my_plot.png','rb') as file:
-    # #     plot_data = file.read()
-    #
+    ax.plot(dates,benchs, 'r', label='HS300',)
+    ax.plot(dates,strategys, 'b', label='Low Market Cap',)
+    ax.legend(loc='best')
+    plt.xlabel('Date')
+    total_len =len(dates)
+    interval = total_len // 10
+    ax.xaxis.set_major_locator(mdates.DayLocator(interval))
+
+    sio = BytesIO()
+    plt.savefig(sio, format='png', bbox_inches='tight', pad_inches=0.0, transparent=True)
+    data = base64.encodebytes(sio.getvalue()).decode()
+    img = 'data:image/png;base64,' + str(data)
+    # 记得关闭，不然画出来的图是重复的
+    plt.close()
+    # plt.show()
+
+
+
+
     content = {'cash': cash,
-               'table': table,
-               'benvalue': benchmark_total,
+               'img': img,
+               'dates': dates,
+               'benchs':benchs,
+               'strategys': strategys,
+               'objs': returns
                }
     return render(request, 'lowmarketcap.html', context=content)
 
+
+def totalbench(request):
+    benchmark_300 = 3692.89
+    benchmark_total = 650907
+
+    #获取沪深300的指数
+    close_300 = get300index()
+    ratio_300 = close_300/benchmark_300 -1
+
+    # 获取总资产的数据，从Profit表中
+    date = datetime.today().date()
+    data_str = date.strftime('%Y-%m-%d')
+    profit = Profit.objects.filter(date=data_str).first()
+    if profit:
+        total = profit.total
+    else:
+        total = 0
+    total_ratio = total/benchmark_total - 1
+
+    #将数据写入数据库。如果没有记录，先创建一条记录（按照date)
+    partfolio300 = Partfolio300.objects.filter(date=date).first()
+    if partfolio300 is None:
+        partfolio300 = Partfolio300(date=date)
+    partfolio300.bench300 = close_300
+    partfolio300.total = total
+    partfolio300.bench_ratio = ratio_300
+    partfolio300.total_ratio = total_ratio
+    partfolio300.save()
+
+    objs = Partfolio300.objects.all()
+    # print(objs)
+
+    # 画图的数据
+#     dates = []
+#     benchs = []
+#     totals = []
+#     returns = Partfolio300.objects.all()
+#     for ret in returns:
+#         dates.append(ret.date)
+#         benchs.append(ret.bench_ratio)
+#         totals.append(ret.total_ratio)
+#     print(totals[0])
+#
+#     #画图
+#     matplotlib.use('Agg')  # 一定要这句。不然会报错
+#     fig, ax = plt.subplots(figsize=(9, 4))
+#     # fig = plt.figure(figsize=(9, 4))
+#     # 画布边缘设置颜色
+#     fig.patch.set_facecolor('white')
+#     fig.patch.set_alpha(0.5)
+#
+#     ax.plot(dates, benchs, 'r', label='HS300')
+#     ax.plot(dates, totals, 'b', label='Property')
+#     ax.legend(loc='best')
+#     plt.xlabel('Date')
+#     total_len = len(dates)
+#     interval = total_len // 10
+#     ax.xaxis.set_major_locator(mdates.DayLocator(interval))
+#
+#     sio = BytesIO()
+#     plt.savefig(sio, format='png', bbox_inches='tight', pad_inches=0.0)
+#     data = base64.encodebytes(sio.getvalue()).decode()
+#     img = 'data:image/png;base64,' + str(data)
+#     # 记得关闭，不然画出来的图是重复的
+#     plt.close()
+#     # plt.show()
+#
+#     content = {
+#                'img': img,
+#                }
+    x = [3,6,7]
+    print(locals())
+    return render(request, 'totalbench.html', {'objs':objs})
+#
+#
+def get300index():
+    stock_300 = qs.realtime_data(code='000300')
+    close_300 = stock_300['最新'].values[0]
+    return close_300
+
+def make_lowmarket_cap_data():
+    benchmark_300 = 3692.89
+    benchmark_total = 15000
+    # cash= 15000
+
+    # 从数据库读取 cash
+    cash_obj = Para.objects.filter(flag='lmup_cash').first()
+    # print(cash_obj.flag)
+    cash = cash_obj.value
+    # with open('cash.txt','r') as f:
+    #     data = f.readlines()
+    # # print(data)
+    # data = data[0].strip()
+    # # print(data)
+    # cash = int(data)
+    # # print(cash)
+
+    # 获取沪深300的数据
+    close_300 = get300index()
+    ratio_300 = close_300 / benchmark_300 - 1
+
+    # 策略里面股票的收盘价,市值
+    values = 0
+    lmup_stocks = Para.objects.filter(flag='lmup_code')
+    for stock in lmup_stocks:
+        code = stock.string
+        obj = StcokInHand.objects.filter(code=code).first()
+        values = values + obj.value
+    total = values + cash
+    value_ratio = total / benchmark_total - 1
+    # print(value_ratio)
+
+    date = datetime.today().date()
+    # print(date)
+    # print(type(date))
+
+    # 数据存入数据库
+    lmarketcap = LowMarkerCap.objects.filter(date=date).first()
+    if lmarketcap is None:
+        lmarketcap = LowMarkerCap(date=date)
+    lmarketcap.bench300 = close_300
+    lmarketcap.value = total
+    lmarketcap.value_ratio = value_ratio
+    lmarketcap.bench_ratio = ratio_300
+    lmarketcap.save()
+
+
+def make_total_bench_data():
+    benchmark_300 = 3692.89
+    benchmark_total = 650907
+
+    #获取沪深300的指数
+    close_300 = get300index()
+    ratio_300 = close_300/benchmark_300 -1
+
+    # 获取总资产的数据，从Profit表中
+    date = datetime.today().date()
+    data_str = date.strftime('%Y-%m-%d')
+    profit = Profit.objects.filter(date=data_str).first()
+    if profit:
+        total = profit.total
+    else:
+        total = 0
+    total_ratio = total/benchmark_total - 1
+
+    #将数据写入数据库。如果没有记录，先创建一条记录（按照date)
+    partfolio300 = Partfolio300.objects.filter(date=date).first()
+    if partfolio300 is None:
+        partfolio300 = Partfolio300(date=date)
+    partfolio300.bench300 = close_300
+    partfolio300.total = total
+    partfolio300.bench_ratio = ratio_300
+    partfolio300.total_ratio = total_ratio
+    partfolio300.save()
 
     # if request.method =='POST':
     #     buy_form = BuystockForm(request.POST)

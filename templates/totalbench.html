@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+benchingmark
+{% endblock %}
+
+
+{% block head %}
+      <script type="text/javascript" src="{% static 'js/echarts.min.js' %}"></script>
+{% endblock %}
+
+
+
+{% block content %}
+<h1>welcome，it just is a cover</h1>
+<h3>和沪深300比比</h3>
+<div>
+    <img src="{{ img }}">
+<!--    <img src="my_plot.png" >-->
+</div>
+
+
+<div id="container" style="width: 800px;height:400px;"></div>
+     <script type="text/javascript">
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+
+    var series_data = [];
+    var xAxis_data_300 = [];
+    var xAxis_data_total = [];
+
+    {% for bench in objs %}
+        series_data.push("{{ bench.date }}")
+        {#注意这里的双引号#}
+        xAxis_data_300.push("{{ bench.bench_ratio}}")
+        xAxis_data_total.push("{{ bench.total_ratio}}")
+    {% endfor %}
+
+
+    option = {
+    title: {
+        text: '对比300'
+    },
+    tooltip: {},
+
+    legend: {
+        data1: ['沪深300'],
+        data2: ['你的资产'],
+    },
+
+    xAxis: {
+        data: series_data
+    },
+
+    yAxis: {},
+
+    series: [{
+        name: '沪深300',
+        type: 'line',
+        //data: [5, 20, 36, 10, 10, 20]
+        data: xAxis_data_300,
+        smooth: true
+    },
+
+    {
+        name: '你的资产',
+        type: 'line',
+        //data: [5, 20, 36, 10, 10, 20]
+        data: xAxis_data_total,
+        smooth: true,
+        color: 'red',
+    },
+
+    ]
+    };
+    myChart.setOption(option);
+    </script>
+
+
+{% endblock %}
+
+

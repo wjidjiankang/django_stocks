@@ -1,6 +1,7 @@
 
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}
 Profit
 {% endblock %}
@@ -11,109 +12,23 @@ Profit
 {% endblock %}
 
 
+
 {% block content %}
 
     <h1>welcome，it just is an example</h1>
 
 
-<div id="test1" style="width: 800px;height:400px;"></div>
-
-     <script type="text/javascript">
-      // 基于准备好的dom，初始化echarts实例
-    var chartDom = document.getElementById('test1');
-    var myChart = echarts.init(chartDom);
-    var option;
-
-    var series_data = [];
-    var xAxis_data = [];
-
-    {% for profit in objs %}
-        series_data.push({{ profit.profit }})
-        {#注意这里的双引号#}
-        xAxis_data.push("{{ profit.date}}")
-    {% endfor %}
-
-
-option = {
-  tooltip: {
-    trigger: 'axis',
-    position: function (pt) {
-      return [pt[0], '10%'];
-    }
-  },
-  title: {
-    left: 'center',
-    text: 'Large Area Chart'
-  },
-  toolbox: {
-    feature: {
-      dataZoom: {
-        yAxisIndex: 'none'
-      },
-      restore: {},
-      saveAsImage: {}
-    }
-  },
-  xAxis: {
-    type: 'category',
-    boundaryGap: false,
-    data: xAxis_data
-  },
-  yAxis: {
-    type: 'value',
-    boundaryGap: [0, '5%']
-  },
-  dataZoom: [
-    {
-      type: 'inside',
-      start: 0,
-      end: 10
-    },
-    {
-      start: 0,
-      end: 10
-    }
-  ],
-  series: [
-    {
-      name: 'Fake Data',
-      type: 'line',
-      symbol: 'none',
-      sampling: 'lttb',
-      itemStyle: {
-        color: 'rgb(255, 70, 131)'
-      },
-      areaStyle: {
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          {
-            offset: 0,
-            color: 'rgb(255, 158, 68)'
-          },
-          {
-            offset: 1,
-            color: 'rgb(255, 70, 131)'
-          }
-        ])
-      },
-      data: series_data
-    }
-  ]
-};
-
-myChart.setOption(option);
-</script>
-
-<div id="test2" style="width: 800px;height:400px;"></div>
+<div id="profit_day" style="width: 800px;height:300px;"></div>
      <script type="text/javascript">
 
       // 基于准备好的dom，初始化echarts实例
-      var myChart = echarts.init(document.getElementById('test2'));
+      var myChart = echarts.init(document.getElementById('profit_day'));
 
       // 指定图表的配置项和数据
         var series_data = [];
         var xAxis_data = [];
 
-      {% for profit in objs %}
+      {% for profit in profits %}
         series_data.push({{ profit.profit }})
         {#注意这里的双引号#}
         xAxis_data.push("{{ profit.date}}")
@@ -121,11 +36,11 @@ myChart.setOption(option);
 
       var option = {
         title: {
-          text: 'ECharts 入门示例'
+          text: '亏钱的艺术'
         },
         tooltip: {},
         legend: {
-          data: ['销量']
+          data: ['亏钱']
         },
         xAxis: {
           data: xAxis_data
@@ -133,7 +48,7 @@ myChart.setOption(option);
         yAxis: {},
         series: [
           {
-            name: '销量',
+            name: '亏钱',
             type: 'bar',
             data:series_data
           }
@@ -143,7 +58,7 @@ myChart.setOption(option);
       myChart.setOption(option);
     </script>
 
-{% endblock %}
+
 
 
 {#    <script type="text/javascript">#}
@@ -187,7 +102,117 @@ myChart.setOption(option);
 {#      myChart.setOption(option);#}
 {#    </script>#}
 
+<div id="lowmarketcap" style="width: 800px;height:300px;"></div>
+     <script type="text/javascript">
+    var dom = document.getElementById("lowmarketcap");
+    var myChart = echarts.init(dom);
 
+    var series_data = [];
+    var xAxis_data_300 = [];
+    var xAxis_data_value = [];
+
+    {% for bench in bench2lmcap %}
+        series_data.push("{{ bench.date }}")
+        {#注意这里的双引号#}
+        xAxis_data_300.push("{{ bench.bench_ratio}}")
+        xAxis_data_value.push("{{ bench.value_ratio}}")
+    {% endfor %}
+
+    option = {
+    title: {
+        text: '小市值__echart'
+    },
+    tooltip: {},
+
+    legend: {
+        data1: ['沪深300'],
+        data2: ['小市值'],
+    },
+
+    xAxis: {
+            data: series_data,
+    },
+
+    yAxis: {},
+
+    series: [{
+        name: '沪深300',
+        type: 'line',
+        data: xAxis_data_300,
+        smooth: true
+    },
+
+    {
+        name: '小市值',
+        type: 'line',
+        data: xAxis_data_value,
+        smooth: true,
+        color: 'red',
+    },
+
+    ]
+    };
+    myChart.setOption(option);
+    </script>
+
+<div id="container" style="width: 800px;height:300px;"></div>
+     <script type="text/javascript">
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+
+    var series_data = [];
+    var xAxis_data_300 = [];
+    var xAxis_data_total = [];
+
+    {% for bench in bench2total %}
+        series_data.push("{{ bench.date }}")
+        {#注意这里的双引号#}
+        xAxis_data_300.push("{{ bench.bench_ratio}}")
+        xAxis_data_total.push("{{ bench.total_ratio}}")
+    {% endfor %}
+
+
+    option = {
+    title: {
+        text: '对比300'
+    },
+    tooltip: {},
+
+    legend: {
+        data1: ['沪深300'],
+        data2: ['你的资产'],
+    },
+
+    xAxis: {
+        data: series_data
+    },
+
+    yAxis: {},
+
+    series: [{
+        name: '沪深300',
+        type: 'line',
+        //data: [5, 20, 36, 10, 10, 20]
+        data: xAxis_data_300,
+        smooth: true
+    },
+
+    {
+        name: '你的资产',
+        type: 'line',
+        //data: [5, 20, 36, 10, 10, 20]
+        data: xAxis_data_total,
+        smooth: true,
+        color: 'red',
+    },
+
+    ]
+    };
+    myChart.setOption(option);
+    </script>
+
+
+{% endblock %}
 
 
 

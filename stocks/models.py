@@ -170,6 +170,13 @@ class LowMarkerCap(models.Model):
     #     index =  stock['最新'].values[0]
     #     return index
 
+class Partfolio300(models.Model):
+    date = models.DateField()
+    bench300 = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    bench_ratio = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    total_ratio = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+
 
     # def save(self, *args, **kargs):
     #     self.bench300 = self.get_bench300()
@@ -182,3 +189,7 @@ class Para(models.Model):
     string = models.CharField(max_length=15)
 
 
+
+class Mydate(models.Model):
+    date = models.DateField()
+    is_processed = models.BooleanField(default=False)

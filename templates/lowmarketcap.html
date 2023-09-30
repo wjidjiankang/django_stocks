@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
-Detail
+lowmarketcap
 {% endblock %}
 
 {% block head %}
@@ -9,6 +10,8 @@ Detail
      .div-left{float:left}
 
     </style>
+    <script type="text/javascript" src="{% static 'js/echarts.min.js' %}"></script>
+
 {% endblock %}
 
 
@@ -22,10 +25,69 @@ Detail
 
 
 <div>
-<!--    <img src="{{img}}">-->
+    <img src="{{ img }}">
 <!--    <img src="my_plot.png" >-->
 </div>
 
+
+<div id="new_container" style="width: 800px;height:400px;"></div>
+     <script type="text/javascript">
+    var dom = document.getElementById("new_container");
+    var myChart = echarts.init(dom);
+
+    var series_data = [];
+    var xAxis_data_300 = [];
+    var xAxis_data_value = [];
+
+    {% for date in dates %}
+        series_data.push("{{ date }}")
+    {% endfor %}
+
+    {% for data in benchs %}
+        xAxis_data_300.push("{{ data }}")
+    {% endfor %}
+
+    {% for data in strategys %}
+        xAxis_data_value.push("{{ data }}")
+    {% endfor %}
+
+
+    option = {
+    title: {
+        text: '小市值__echart'
+    },
+    tooltip: {},
+
+    legend: {
+        data1: ['沪深300'],
+        data2: ['小市值'],
+    },
+
+    xAxis: {
+            data: series_data,
+    },
+
+    yAxis: {},
+
+    series: [{
+        name: '沪深300',
+        type: 'line',
+        data: xAxis_data_300,
+        smooth: true
+    },
+
+    {
+        name: '你的资产',
+        type: 'line',
+        data: xAxis_data_value,
+        smooth: true,
+        color: 'red',
+    },
+
+    ]
+    };
+    myChart.setOption(option);
+    </script>
 
 {% endblock %}
 
