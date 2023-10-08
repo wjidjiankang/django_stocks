@@ -1,6 +1,6 @@
 from django.db import models
 import qstock as qs
-from datetime import datetime
+from datetime import datetime, date
 import akshare as ak
 from decimal import Decimal
 
@@ -78,7 +78,7 @@ class Record(models.Model):
     quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=8, decimal_places=3, default=0)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    date = models.CharField(max_length=10)
+    date = models.DateField()
 
     def __str__(self):
         return self.stock
@@ -142,12 +142,12 @@ class Record(models.Model):
 
     def save(self, *args, **kargs):
         # self.amount = self.get_ammount()
-        self.date = datetime.now().strftime('%Y-%m-%d')
+        self.date = date.today()
         super(Record, self).save(*args, **kargs)
 
 
 class Profit(models.Model):
-    date = models.CharField(max_length=10)
+    date = models.DateField()
     value = models.DecimalField(max_digits=11, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=11, decimal_places=2, default=0)
     profit = models.DecimalField(max_digits=11, decimal_places=2, default=0)
@@ -155,7 +155,7 @@ class Profit(models.Model):
     cash_change = models.DecimalField(max_digits=11, decimal_places=2, default=0)
 
     def save(self, *args, **kargs):
-        self.date = datetime.now().strftime('%Y-%m-%d')
+        self.date = date.today()
         super(Profit, self).save(*args, **kargs)
 
 class LowMarkerCap(models.Model):

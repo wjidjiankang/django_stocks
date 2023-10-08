@@ -10,8 +10,17 @@ Index
     {#<a  href="{% url 'stocks:detail/{{ stock.code }}' %}" >持仓</a>#}
     <h3>一些小市值的股票,现金{{cash}}可挥霍:今天{{low_market_tip}}</h3>
 
-    <div>
+    <div class="stocklist" id="lowmarketcap">
         {{ table | safe }}
+    </div>
+    <br>
+    <div class="stocklist" id="hotrank">
+        <h3>东财热股</h3>
+        {{ hot_rank_em_df_html | safe }}
+    </div>
+    <div class="stocklist" id="hotup">
+        <h3>东财飙升</h3>
+        {{ hot_up_em_df_html | safe }}
     </div>
 
 

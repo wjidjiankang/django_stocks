@@ -10,6 +10,8 @@
 
 	{% block head %}
 	{% endblock %}
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
+
 </head>
 
 
@@ -18,9 +20,8 @@
 <a  href="{% url 'stocks:index' %}" >首页</a>
 <a  href="{% url 'stocks:trade' %}" >数据输入</a>
 <a  href="{% url 'stocks:stockinhand' %}">持仓</a>
-<a  href="{% url 'stocks:profit' %}">虚荣</a>
-<a  href="{% url 'stocks:lowmarketcap' %}">小市值</a>
-<a  href="{% url 'stocks:totalbench' %}">看看300</a>
+<a  href="{% url 'stocks:profit' %}">亏钱的艺术</a>
+
 
 
 <div class="container">
