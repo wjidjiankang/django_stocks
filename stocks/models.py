@@ -50,21 +50,21 @@ class StcokInHand(models.Model):
         return Decimal(estimation)
 
     def save(self, *args, **kargs):
-        stockinform = self.get_stock_inform()
-        self.name = stockinform['name']
-        self.close = stockinform['close']
-        close = stockinform['close']
-        self.close = Decimal(close).quantize(Decimal('0.000'))
-        self.ratio = stockinform['ratio']
-        preclose = stockinform['preclose']
-        self.preclose = Decimal(preclose).quantize(Decimal('0.000'))
+        # stockinform = self.get_stock_inform()
+        # self.name = stockinform['name']
+        # # self.close = stockinform['close']
+        # close = stockinform['close']
+        # self.close = Decimal(close).quantize(Decimal('0.000'))
+        # self.ratio = stockinform['ratio']
+        # preclose = stockinform['preclose']
+        # self.preclose = Decimal(preclose).quantize(Decimal('0.000'))
 
         self.quantityinhand = self.buyquantity - self.sellquantity
         self.profit = round(self.close * self.quantityinhand + self.sellamount - self.buyamount, 2)
         self.value = round(self.quantityinhand * self.close, 2)
         self.profit_day = round((self.close-self.preclose) * self.quantityinhand, 2)
         self.profit_ratio = 100*self.profit/self.buyamount
-        self.estimation = self.get_estimation()
+        # self.estimation = self.get_estimation()
         super(StcokInHand, self).save(*args, **kargs)
 
     def __str__(self):
@@ -193,3 +193,12 @@ class Para(models.Model):
 class Mydate(models.Model):
     date = models.DateField()
     is_processed = models.BooleanField(default=False)
+
+
+# 支持向量机 策略的数据
+class SVR(models.Model):
+    date = models.DateField()
+    bench300 = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    value = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    bench_ratio = models.DecimalField(max_digits=11, decimal_places=2, default=0)
+    value_ratio = models.DecimalField(max_digits=11, decimal_places=2, default=0)

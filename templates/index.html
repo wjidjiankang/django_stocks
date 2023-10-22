@@ -9,6 +9,7 @@ Index
     <h1>welcome，it just is a cover </h1>
     {#<a  href="{% url 'stocks:detail/{{ stock.code }}' %}" >持仓</a>#}
     <h3>一些小市值的股票,现金{{cash}}可挥霍:今天{{low_market_tip}}</h3>
+     <h3>看看SVR,还有{{svr_cash}}可挥霍:今天{{low_market_tip}}</h3>
 
     <div class="stocklist" id="lowmarketcap">
         {{ table | safe }}
@@ -22,6 +23,13 @@ Index
         <h3>东财飙升</h3>
         {{ hot_up_em_df_html | safe }}
     </div>
+
+
+ <form name="cleanform"  action="/cleandata/"  method="POST">
+        {% csrf_token %}
+
+    <input style=" "     type="submit" name="clean" value="Clean" />
+ </form>
 
 
 {% endblock %}

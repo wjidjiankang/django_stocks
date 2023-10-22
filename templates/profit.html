@@ -45,7 +45,11 @@ Profit
         xAxis: {
           data: xAxis_data
         },
-        yAxis: {},
+        yAxis: {
+                axisLabel: {
+            formatter: '{value} 元'
+        },
+        },
         series: [
           {
             name: '亏钱',
@@ -133,7 +137,12 @@ Profit
             data: series_data,
     },
 
-    yAxis: {},
+    yAxis: {
+         axisLabel: {
+            formatter: '{value} %'
+            },
+
+    },
 
     series: [{
         name: '沪深300',
@@ -187,7 +196,12 @@ Profit
         data: series_data
     },
 
-    yAxis: {},
+    yAxis: {
+         axisLabel: {
+            formatter: '{value} %'
+            },
+
+    },
 
     series: [{
         name: '沪深300',
@@ -210,6 +224,66 @@ Profit
     };
     myChart.setOption(option);
     </script>
+
+
+<div id="svr_curve" style="width: 800px;height:300px;"></div>
+     <script type="text/javascript">
+    var dom = document.getElementById("svr_curve");
+    var myChart = echarts.init(dom);
+
+    var series_data = [];
+    var xAxis_data_300 = [];
+    var xAxis_data_value = [];
+
+    {% for bench in bench2svr %}
+        series_data.push("{{ bench.date }}")
+        {#注意这里的双引号#}
+        xAxis_data_300.push("{{ bench.bench_ratio}}")
+        xAxis_data_value.push("{{ bench.value_ratio}}")
+    {% endfor %}
+
+    option = {
+    title: {
+        text: 'svr__echart'
+    },
+    tooltip: {},
+
+    legend: {
+        data1: ['沪深300'],
+        data2: ['svr'],
+    },
+
+    xAxis: {
+            data: series_data,
+    },
+
+    yAxis: {
+         axisLabel: {
+            formatter: '{value} %'
+            },
+
+    },
+
+    series: [{
+        name: '沪深300',
+        type: 'line',
+        data: xAxis_data_300,
+        smooth: true
+    },
+
+    {
+        name: 'svr',
+        type: 'line',
+        data: xAxis_data_value,
+        smooth: true,
+        color: 'red',
+    },
+
+    ]
+    };
+    myChart.setOption(option);
+    </script>
+
 
 
 {% endblock %}

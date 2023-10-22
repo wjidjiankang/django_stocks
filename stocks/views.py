@@ -1,32 +1,21 @@
 from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from .forms import BuystockForm, SellstockForm, StockinhandForm
-from .models import Record, StcokInHand, Profit, LowMarkerCap, Para, Partfolio300, Mydate
+from .models import Record, StcokInHand, Profit, LowMarkerCap, Para, Partfolio300, Mydate,SVR
 from datetime import datetime, date ,timedelta
 from decimal import Decimal
 import akshare as ak
 import pandas as pd
 import qstock as qs
-# import matplotlib.pyplot as plt
-from io import BytesIO
-import base64
-import imp
-import matplotlib
-from matplotlib import pyplot as plt
-import matplotlib.dates as mdates
+# # import matplotlib.pyplot as plt
+# from io import BytesIO
+# import base64
+# import imp
+# import matplotlib
+# from matplotlib import pyplot as plt
+# import matplotlib.dates as mdates
 
-date = date.today()
 
 def index(request):
-    #获取交易日期的信息
-    import akshare as ak
-    tool_trade_date_hist_sina_df = ak.tool_trade_date_hist_sina()
-    # print(tool_trade_date_hist_sina_df)
-    # date = tool_trade_date_hist_sina_df.iloc[0, 0]
-    # print(date)
-    # print(type(date))
-    # today = datetime.today().date()
-    # print(today)
-
     # 市值在20亿附近的股票list
     low_market_cap_df = get_market_cap()
     table = low_market_cap_df.to_html(index=False)
@@ -35,19 +24,23 @@ def index(request):
     cash_obj = Para.objects.filter(flag='lmup_cash').first()
     cash = cash_obj.value
 
+    svr_obj = Para.objects.filter(flag='svr_cash').first()
+    svr_cash = svr_obj.value
+
+
     # 一天只处理一次，实现天数的累积
-    # today = date.today()
+    today = date.today()
     # before_day = today - timedelta(days=5)
     # print(before_day)
-    data_today = Mydate.objects.filter(date=date).first()
+    data_today = Mydate.objects.filter(date=today).first()
 
     if data_today is None:
-        new_data = Mydate(date=date)
+        new_data = Mydate(date=today)
         # 在这里添加你需要处理的数据
         # ...
         new_data.is_processed = True
         new_data.save()
-        if is_trade(date):
+        if is_trade(today):
             print('a')
             para = Para.objects.filter(flag='lmup_date').first()
             para.value = para.value + 1
@@ -70,7 +63,6 @@ def index(request):
     hot_rank_em_df_html = hot_rank_em_df.to_html(index=False)
 
     # 东财热度飙升榜
-
     hot_up_em_df = ak.stock_hot_up_em()[:20]
     hot_up_em_df_html = hot_up_em_df.to_html(index=False)
 
@@ -79,11 +71,14 @@ def index(request):
             'low_market_tip': low_market_tip,
             'hot_rank_em_df_html': hot_rank_em_df_html,
             'hot_up_em_df_html': hot_up_em_df_html,
+            'svr_cash': svr_cash,
            }
     return render(request, 'index.html', dict)
 
+
+# 判断是否是交易日
 def is_trade(date):
-    import akshare as ak
+    # 获取交易日期的信息
     tool_trade_date_hist_sina_df = ak.tool_trade_date_hist_sina()
     if date in tool_trade_date_hist_sina_df['trade_date'].values:
         istrade = True
@@ -127,6 +122,7 @@ def buystock(request):
             stock.save()
 
             # 把策略的信息存入数据库
+            # 小市值策略
             if strategy =='lmup':
                 code = Para(flag='lmup_code', string=stock.code)
                 code.save()
@@ -135,8 +131,17 @@ def buystock(request):
                 cash.value = cash.value - record.amount
                 cash.save()
 
-            # date = date.today()
-            profit = Profit.objects.filter(date=date).first()
+            # svr 支持向量机策略
+            if strategy =='svr':
+                code = Para(flag='svr_code', string=stock.code)
+                code.save()
+                cash = Para.objects.filter(flag='svr_cash').first()
+                print(cash)
+                cash.value = cash.value - record.amount
+                cash.save()
+
+            today = date.today()
+            profit = Profit.objects.filter(date=today).first()
 
             profits = Profit.objects.all()
             len_profits = len(profits)
@@ -144,7 +149,7 @@ def buystock(request):
             cash_pre = pre_profit.cash
 
             if profit is None:
-                profit = Profit(date=date)
+                profit = Profit(date=today)
 
             profit.cash_change = profit.cash_change - record.amount
             profit.cash = cash_pre + profit.cash_change
@@ -204,8 +209,17 @@ def sellstock(request):
                 cash.value = cash.value + record.amount
                 cash.save()
 
-            # date = date.today()
-            profit = Profit.objects.filter(date=date).first()
+            # svr 支持向量机 策略
+            if strategy =='svr':
+                code = Para.objects.filter(flag='svr_code', string=stock.code)
+                code.delete()
+                cash = Para.objects.filter(flag='svr_cash').first()
+                cash.value = cash.value + record.amount
+                cash.save()
+
+
+            today = date.today()
+            profit = Profit.objects.filter(date=today).first()
 
             profits = Profit.objects.all()
             len_profits = len(profits)
@@ -213,7 +227,7 @@ def sellstock(request):
             cash_pre = pre_profit.cash
 
             if profit is None:
-                profit = Profit(date=date)
+                profit = Profit(date=today)
 
             profit.cash_change = profit.cash_change + record.amount
             profit.cash = cash_pre + profit.cash_change
@@ -229,8 +243,8 @@ def stock_inhand(request):
         stock.save()
         total_value = stock.value + total_value
 
-    # date = date.today()
-    profit = Profit.objects.filter(date=date).first()
+    today = date.today()
+    profit = Profit.objects.filter(date=today).first()
 
     profits = Profit.objects.all()
     len_profits = len(profits)
@@ -239,7 +253,7 @@ def stock_inhand(request):
     total_pre = pre_profit.total
 
     if profit is None:
-        profit = Profit(date=date)
+        profit = Profit(date=today)
 
     profit.cash = cash_pre + profit.cash_change
     profit.value = total_value
@@ -273,10 +287,14 @@ def profit(request):
     bench2lmcap = LowMarkerCap.objects.all()
     make_total_bench_data()
     bench2total = Partfolio300.objects.all()
+    make_svr_data()
+    bench2srv = SVR.objects.all()
 
     context={'profits': profits,
              'bench2lmcap': bench2lmcap,
-             'bench2total': bench2total,}
+             'bench2total': bench2total,
+             'bench2svr': bench2srv,
+             }
 
     return render(request, 'profit.html', context)
 
@@ -327,7 +345,7 @@ def make_lowmarket_cap_data():
 
     # 获取沪深300的数据
     close_300 = get300index()
-    ratio_300 = close_300 / benchmark_300 - 1
+    ratio_300 = (close_300 / benchmark_300 - 1)*100
 
     # 策略里面股票的收盘价,市值
     values = 0
@@ -337,17 +355,17 @@ def make_lowmarket_cap_data():
         obj = StcokInHand.objects.filter(code=code).first()
         values = values + obj.value
     total = values + cash
-    value_ratio = total / benchmark_total - 1
+    value_ratio = (total / benchmark_total - 1)*100
     # print(value_ratio)
 
-    date = datetime.today().date()
+    today = date.today()
     # print(date)
     # print(type(date))
 
     # 数据存入数据库
-    lmarketcap = LowMarkerCap.objects.filter(date=date).first()
+    lmarketcap = LowMarkerCap.objects.filter(date=today).first()
     if lmarketcap is None:
-        lmarketcap = LowMarkerCap(date=date)
+        lmarketcap = LowMarkerCap(date=today)
     lmarketcap.bench300 = close_300
     lmarketcap.value = total
     lmarketcap.value_ratio = value_ratio
@@ -361,22 +379,22 @@ def make_total_bench_data():
 
     #获取沪深300的指数
     close_300 = get300index()
-    ratio_300 = close_300/benchmark_300 -1
+    ratio_300 = (close_300/benchmark_300 -1)*100
 
     # 获取总资产的数据，从Profit表中
-    date = datetime.today().date()
-    data_str = date.strftime('%Y-%m-%d')
-    profit = Profit.objects.filter(date=data_str).first()
+    today = date.today()
+    # data_str = date.strftime('%Y-%m-%d')
+    profit = Profit.objects.filter(date=today).first()
     if profit:
         total = profit.total
     else:
         total = 0
-    total_ratio = total/benchmark_total - 1
+    total_ratio = (total/benchmark_total - 1)*100
 
     # 将数据写入数据库。如果没有记录，先创建一条记录（按照date)
-    partfolio300 = Partfolio300.objects.filter(date=date).first()
+    partfolio300 = Partfolio300.objects.filter(date=today).first()
     if partfolio300 is None:
-        partfolio300 = Partfolio300(date=date)
+        partfolio300 = Partfolio300(date=today)
     partfolio300.bench300 = close_300
     partfolio300.total = total
     partfolio300.bench_ratio = ratio_300
@@ -384,9 +402,60 @@ def make_total_bench_data():
     partfolio300.save()
 
 
+# svr 策略的数据村进入数据库
+def make_svr_data():
+    benchmark_300 = 3692.89
+    benchmark_total = 50000
+
+    # 从数据库读取 cash
+    cash_obj = Para.objects.filter(flag='svr_cash').first()
+    # print(cash_obj.flag)
+    cash = cash_obj.value
+
+    # 获取沪深300的数据
+    close_300 = get300index()
+    ratio_300 = (close_300 / benchmark_300 - 1)*100
+
+    # 策略里面股票的收盘价,市值
+    # 这是考虑各个策略持股不同的情况。几个策略买了相同的股票，数据就会出错。下次需要改进
+    values = 0
+    svr_stocks = Para.objects.filter(flag='svr_code')
+    for stock in svr_stocks:
+        code = stock.string
+        obj = StcokInHand.objects.filter(code=code).first()
+        values = values + obj.value
+    total = values + cash
+    value_ratio = (total / benchmark_total - 1)*100
+    # print(value_ratio)
+
+    today = date.today()
+    svr = SVR.objects.filter(date=today).first()
+    if svr is None:
+        svr = SVR(date=today)
+    svr.bench300 = close_300
+    svr.value = total
+    svr.value_ratio = value_ratio
+    svr.bench_ratio = ratio_300
+    svr.save()
 
 
+def cleandata(request):
+    if request.method == "POST":
+        profits = Profit.objects.filter(profit=0)
+        for profit in profits:
+            if not is_trade(profit.date):
+                profit.delete()
 
+        lowmarkets = LowMarkerCap.objects.all()
+        for lowmarket in lowmarkets:
+            if not is_trade(lowmarket.date):
+                lowmarket.delete()
+
+        partfolios = Partfolio300.objects.all()
+        for partfolio in partfolios:
+            if not is_trade(partfolio.date):
+                partfolio.delete()
+    return redirect('/profit/')
 
 # 原来通过这个模块，再使用matplotlib来绘制图案，在前端输出
 # 后来的方案是使用echarts，所以不用了
