@@ -87,6 +87,17 @@ def is_trade(date):
     return istrade
 
 
+# 根据code 获取股票的一些基本信息
+def get_stock_information(code):
+    stock = qs.realtime_data(code=code)
+    name = stock['名称'].values[0]
+    close = stock['最新'].values[0]
+    ratio = stock['涨幅'].values[0]
+    preclose = stock['昨收'].values[0]
+    dict = {'name': name, 'close': close, 'ratio': ratio, 'preclose': preclose}
+    return dict
+
+
 def buystock(request):
     sell_form = SellstockForm()
     # if request.method=="GET":
@@ -104,7 +115,9 @@ def buystock(request):
 
             if stock is None:
                 # print(stock_form.data['code'])
-                stock = StcokInHand(code=stock_form.data['code'])
+                code = stock_form.data['code']
+                stock = StcokInHand(code=code)
+                stock.name = get_stock_information(code)['name']   # 根据股票code获取股票的名称
                 stock.save()
 
             record = buy_form.save(commit=False)
@@ -185,7 +198,10 @@ def sellstock(request):
         mark = request.POST.get('sell_radio')
         strategy = request.POST.get('stategys')
         if stock_form.is_valid() and sell_form.is_valid():
-            stock = StcokInHand.objects.filter(code=stock_form.data['code']).first()
+            code = stock_form.data['code']
+            stock = StcokInHand.objects.filter(code=code).first()
+            stock.name = get_stock_information(code)['name']  # 股票的名称刷新
+            stock.save()
             record = sell_form.save(commit=False)
             record.stock = stock
             record.mark = mark
@@ -235,11 +251,37 @@ def sellstock(request):
     return redirect('stocks:trade')
 
 
-def stock_inhand(request):
-    stocks = StcokInHand.objects.exclude(quantityinhand=0).order_by('-ratio')
-
+# 刷新持有股票的数据
+def refresh_stock():
+    realtime_stock = ak.stock_zh_a_spot_em()   # 股票行情
+    realtime_bond = ak.bond_zh_hs_cov_spot()  # 可转债行情
+    realtime_etf = ak.fund_etf_spot_em()   # etf行情
+    stocks = StcokInHand.objects.exclude(quantityinhand=0).all()
+    # print(stocks[0].code)
     total_value = 0
     for stock in stocks:
+        # print(stock.code)
+        code = stock.code
+        if code[0] in ['6','4','8','0','3']:   # 识别 股票
+            stock_df = realtime_stock[realtime_stock['代码']==code]
+            stock.name = stock_df['名称'].values[0]
+            stock.close = Decimal(  stock_df['最新价'].values[0])
+            stock.ratio = stock_df['涨跌幅'].values[0]
+        elif code[0:2] in ['11','12']:  # 判断 可转债
+            if code[0:2] == '11':      # 根据ak返回的数据结构,code + 'sh' 或'sz' 处理
+                code  = 'sh'+ code
+            else :
+                code = 'sz'+ code
+            stock_df = realtime_bond[realtime_bond['symbol']==code]
+            stock.name = stock_df['name'].values[0]
+            stock.close = Decimal(stock_df['trade'].values[0])
+            stock.ratio = stock_df['pricechange'].values[0]
+        else:                   # etf
+            stock_df = realtime_etf[realtime_etf['代码'] == code]
+            stock.name = stock_df['名称'].values[0]
+            stock.close = Decimal(stock_df['最新价'].values[0])
+            stock.ratio = stock_df['涨跌幅'].values[0]
+
         stock.save()
         total_value = stock.value + total_value
 
@@ -260,6 +302,36 @@ def stock_inhand(request):
     profit.total = Decimal(profit.value) + profit.cash
     profit.profit = profit.total - total_pre
     profit.save()
+    return profit
+
+
+
+def stock_inhand(request):
+
+    # total_value = 0
+    # for stock in stocks:
+    #     stock.save()
+    #     total_value = stock.value + total_value
+    #
+    # today = date.today()
+    # profit = Profit.objects.filter(date=today).first()
+    #
+    # profits = Profit.objects.all()
+    # len_profits = len(profits)
+    # pre_profit = profits[len_profits - 2]
+    # cash_pre = pre_profit.cash
+    # total_pre = pre_profit.total
+    #
+    # if profit is None:
+    #     profit = Profit(date=today)
+    #
+    # profit.cash = cash_pre + profit.cash_change
+    # profit.value = total_value
+    # profit.total = Decimal(profit.value) + profit.cash
+    # profit.profit = profit.total - total_pre
+    # profit.save()
+    profit = refresh_stock()
+    stocks = StcokInHand.objects.exclude(quantityinhand=0).order_by('-ratio')
 
     return render(request, 'stockinhand.html', {'stocks': stocks, 'profit': profit})
 
@@ -282,6 +354,7 @@ def stockdetail(request, code):
 
 
 def profit(request):
+    profit = refresh_stock()
     profits = Profit.objects.all()
     make_lowmarket_cap_data()
     bench2lmcap = LowMarkerCap.objects.all()
