@@ -50,50 +50,52 @@ def get_estimation(code):
     return Decimal(estimation)
 
 
-while True:
-    today = datetime.date.today()
-    now = datetime.datetime.now()
-    start_time = datetime.time(9, 20)
-    end_time = datetime.time(15, 10)
+# 将实时数据定时写入数据库，
+def write_real_data():
+    while True:
+        # 确定需要写入的时间
+        today = datetime.date.today()
+        now = datetime.datetime.now()
+        start_time = datetime.time(9, 20)
+        end_time = datetime.time(22, 30)
 
-    tool_trade_date_hist_sina_df = ak.tool_trade_date_hist_sina()
-    if today in tool_trade_date_hist_sina_df['trade_date'].values:
-        if start_time < now.time() < end_time:
-            cursor = conn.cursor()
-            query = " select code from stocks_stcokinhand where quantityinhand>0"
-            codelist = cursor.execute(query).fetchall()
-            # print(codelist)
-            for code in codelist:
-                code = code[0]
-                stockinform = get_stock_infrom(code)
-                name = stockinform['name']
-                close = stockinform['close']
-                # close = Decimal(close_temp).quantize(Decimal('0.000'))
-                ratio = stockinform['ratio']
-                preclose = stockinform['preclose']
-                # preclose = Decimal(preclose_temp).quantize(Decimal('0.000'))
+        tool_trade_date_hist_sina_df = ak.tool_trade_date_hist_sina()
+        if today in tool_trade_date_hist_sina_df['trade_date'].values:
+            if start_time < now.time() < end_time:
+                cursor = conn.cursor()
+                query = " select code from stocks_stcokinhand where quantityinhand>0"
+                codelist = cursor.execute(query).fetchall()
+                # print(codelist)
+                for code in codelist:
+                    code = code[0]
+                    stockinform = get_stock_infrom(code)
+                    name = stockinform['name']
+                    close = stockinform['close']
+                    # close = Decimal(close_temp).quantize(Decimal('0.000'))
+                    ratio = stockinform['ratio']
+                    preclose = stockinform['preclose']
+                    # preclose = Decimal(preclose_temp).quantize(Decimal('0.000'))
 
-                query = " update stocks_stcokinhand set name=? ,close=? ,ratio=? , preclose= ? where code =? "
-                cursor.execute(query, (name, close, ratio, preclose, code,))
-                conn.commit()
+                    query = " update stocks_stcokinhand set name=? ,close=? ,ratio=? , preclose= ? where code =? "
+                    cursor.execute(query, (name, close, ratio, preclose, code,))
+                    conn.commit()
 
-                # print(preclose)
-                # print(type(preclose))
-                # print(type(code))
-                # print(type(name))
-                # print(type(close))
-                # print(type(ratio))
-                # print(code,close,ratio,preclose,name)
-            cursor.close()
-            print('更新完数据1次数据')
+                    # print(preclose)
+                    # print(type(preclose))
+                    # print(type(code))
+                    # print(type(name))
+                    # print(type(close))
+                    # print(type(ratio))
+                    # print(code,close,ratio,preclose,name)
+                cursor.close()
+                print('更新完数据1次数据')
 
+            else:
+                print('非交易时间')
         else:
-            print('非交易时间')
-    else:
-        print('非交易日期')
-    time.sleep(180)
+            print('非交易日期')
+        time.sleep(180)
 
 
-
-
-
+if __name__ == "__main__":
+    write_real_data()

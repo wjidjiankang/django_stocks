@@ -6,12 +6,14 @@ from decimal import Decimal
 import akshare as ak
 import pandas as pd
 import qstock as qs
+import os
 # # import matplotlib.pyplot as plt
-# from io import BytesIO
-# import base64
+from io import BytesIO
+import base64
 # import imp
-# import matplotlib
-# from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 # import matplotlib.dates as mdates
 
 
@@ -87,6 +89,17 @@ def is_trade(date):
     return istrade
 
 
+# 根据code 获取股票的一些基本信息
+def get_stock_information(code):
+    stock = qs.realtime_data(code=code)
+    name = stock['名称'].values[0]
+    close = stock['最新'].values[0]
+    ratio = stock['涨幅'].values[0]
+    preclose = stock['昨收'].values[0]
+    dict = {'name': name, 'close': close, 'ratio': ratio, 'preclose': preclose}
+    return dict
+
+
 def buystock(request):
     sell_form = SellstockForm()
     # if request.method=="GET":
@@ -104,7 +117,9 @@ def buystock(request):
 
             if stock is None:
                 # print(stock_form.data['code'])
-                stock = StcokInHand(code=stock_form.data['code'])
+                code = stock_form.data['code']
+                stock = StcokInHand(code=code)
+                stock.name = get_stock_information(code)['name']   # 根据股票code获取股票的名称
                 stock.save()
 
             record = buy_form.save(commit=False)
@@ -185,7 +200,10 @@ def sellstock(request):
         mark = request.POST.get('sell_radio')
         strategy = request.POST.get('stategys')
         if stock_form.is_valid() and sell_form.is_valid():
-            stock = StcokInHand.objects.filter(code=stock_form.data['code']).first()
+            code = stock_form.data['code']
+            stock = StcokInHand.objects.filter(code=code).first()
+            stock.name = get_stock_information(code)['name']  # 股票的名称刷新
+            stock.save()
             record = sell_form.save(commit=False)
             record.stock = stock
             record.mark = mark
@@ -235,11 +253,41 @@ def sellstock(request):
     return redirect('stocks:trade')
 
 
-def stock_inhand(request):
-    stocks = StcokInHand.objects.exclude(quantityinhand=0).order_by('-ratio')
-
+# 刷新持有股票的数据
+def refresh_stock():
+    realtime_stock = ak.stock_zh_a_spot_em()   # 股票行情
+    realtime_bond = ak.bond_zh_hs_cov_spot()  # 可转债行情
+    realtime_etf = ak.fund_etf_spot_em()   # etf行情
+    stocks = StcokInHand.objects.exclude(quantityinhand=0).all()
+    # print(stocks[0].code)
     total_value = 0
     for stock in stocks:
+        # print(stock.code)
+        code = stock.code
+        if code[0] in ['6','4','8','0','3']:   # 识别 股票
+            stock_df = realtime_stock[realtime_stock['代码']==code]
+            stock.name = stock_df['名称'].values[0]
+            stock.close = Decimal(  stock_df['最新价'].values[0])
+            stock.ratio = stock_df['涨跌幅'].values[0]
+            # stock.pre_close = stock_df['昨收'].values[0]
+            change = stock.ratio = stock_df['涨跌额'].values[0]
+        elif code[0:2] in ['11','12']:  # 判断 可转债
+            if code[0:2] == '11':      # 根据ak返回的数据结构,code + 'sh' 或'sz' 处理
+                code  = 'sh'+ code
+            else :
+                code = 'sz'+ code
+            stock_df = realtime_bond[realtime_bond['symbol']==code]
+            stock.name = stock_df['name'].values[0]
+            stock.close = Decimal(stock_df['trade'].values[0])
+            stock.ratio = stock_df['changepercent'].values[0]
+            change = stock_df['pricechange'].values[0]
+        else:                   # etf
+            stock_df = realtime_etf[realtime_etf['代码'] == code]
+            stock.name = stock_df['名称'].values[0]
+            stock.close = Decimal(stock_df['最新价'].values[0])
+            stock.ratio = stock_df['涨跌幅'].values[0]
+            change =stock.ratio = stock_df['涨跌额'].values[0]
+        stock.profit_day = change * stock.quantityinhand
         stock.save()
         total_value = stock.value + total_value
 
@@ -260,6 +308,36 @@ def stock_inhand(request):
     profit.total = Decimal(profit.value) + profit.cash
     profit.profit = profit.total - total_pre
     profit.save()
+    return profit
+
+
+
+def stock_inhand(request):
+
+    # total_value = 0
+    # for stock in stocks:
+    #     stock.save()
+    #     total_value = stock.value + total_value
+    #
+    # today = date.today()
+    # profit = Profit.objects.filter(date=today).first()
+    #
+    # profits = Profit.objects.all()
+    # len_profits = len(profits)
+    # pre_profit = profits[len_profits - 2]
+    # cash_pre = pre_profit.cash
+    # total_pre = pre_profit.total
+    #
+    # if profit is None:
+    #     profit = Profit(date=today)
+    #
+    # profit.cash = cash_pre + profit.cash_change
+    # profit.value = total_value
+    # profit.total = Decimal(profit.value) + profit.cash
+    # profit.profit = profit.total - total_pre
+    # profit.save()
+    profit = refresh_stock()
+    stocks = StcokInHand.objects.exclude(quantityinhand=0).order_by('-ratio')
 
     return render(request, 'stockinhand.html', {'stocks': stocks, 'profit': profit})
 
@@ -282,6 +360,7 @@ def stockdetail(request, code):
 
 
 def profit(request):
+    profit = refresh_stock()
     profits = Profit.objects.all()
     make_lowmarket_cap_data()
     bench2lmcap = LowMarkerCap.objects.all()
@@ -290,13 +369,71 @@ def profit(request):
     make_svr_data()
     bench2srv = SVR.objects.all()
 
-    context={'profits': profits,
-             'bench2lmcap': bench2lmcap,
-             'bench2total': bench2total,
-             'bench2svr': bench2srv,
-             }
+    dates = [d.date for d in bench2total]
+    bench_ratios = [d.bench_ratio for d in bench2total]
+    ratios = [d.total_ratio for d in bench2total]
 
-    return render(request, 'profit.html', context)
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 用于显示中文
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+
+    # 创建一个图形和轴
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+
+    # 绘制 bench_ratio 的线
+    ax.plot(dates, bench_ratios, label='HS300',color = 'blue')
+    # 绘制 ratio 的线
+    ax.plot(dates, ratios, label='Ratio',color = 'red')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Ratio')
+    ax.legend()
+    # 将图形保存到内存中的字节流中
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    # 将图像编码为 base64 字符串
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+    # 传递图像到模板
+
+    dates_profit = [d.date for d in profits]
+    profit_values = [d.profit for d in profits]
+
+    # 创建一个图形和轴，设置图形大小为 (12, 6)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+
+    # 绘制柱状图，根据 profit_i 的正负设置颜色
+    colors = ['red' if value >= 0 else 'blue' for value in profit_values]
+    ax.bar(dates_profit, profit_values, color = colors)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Profit')
+
+    # 将图形保存到内存中的字节流中
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    # 将图像编码为 base64 字符串
+    graphic1 = base64.b64encode(image_png)
+    graphic1 = graphic1.decode('utf-8')
+
+    # 传递图像到模板
+    return render(request, 'profit.html', {'graphic': graphic, 'graphic1':graphic1})
+
+    # context={'profits': profits,
+    #          'bench2lmcap': bench2lmcap,
+    #          'bench2total': bench2total,
+    #          'bench2svr': bench2srv,
+    #          }
+
+    # return render(request, 'profit.html', context)
 
 
 def total(request):

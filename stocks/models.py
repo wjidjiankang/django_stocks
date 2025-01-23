@@ -62,7 +62,7 @@ class StcokInHand(models.Model):
         self.quantityinhand = self.buyquantity - self.sellquantity
         self.profit = round(self.close * self.quantityinhand + self.sellamount - self.buyamount, 2)
         self.value = round(self.quantityinhand * self.close, 2)
-        self.profit_day = round((self.close-self.preclose) * self.quantityinhand, 2)
+        # self.profit_day = round((self.close-self.preclose) * self.quantityinhand, 2)
         self.profit_ratio = 100*self.profit/self.buyamount
         # self.estimation = self.get_estimation()
         super(StcokInHand, self).save(*args, **kargs)
