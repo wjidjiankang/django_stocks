@@ -4,7 +4,7 @@ from .models import Record, StcokInHand
 
 
 class StockinhandForm(ModelForm):
-    code = forms.CharField(max_length=6, min_length=6, required=True)
+    code = forms.CharField(max_length=6, min_length=5, required=True)
 
     class Meta:
         model = StcokInHand

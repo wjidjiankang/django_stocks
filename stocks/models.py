@@ -25,14 +25,14 @@ class StcokInHand(models.Model):
     profit_ratio = models.FloatField(default=0, blank=True, null=True)
     strategy = models.CharField(max_length=20,default='2')
 
-    def get_stock_inform(self):
-        stock = qs.realtime_data(code=self.code)
-        name = stock['名称'].values[0]
-        close = stock['最新'].values[0]
-        ratio = stock['涨幅'].values[0]
-        preclose = stock['昨收'].values[0]
-        dict = {'name': name, 'close': close, 'ratio': ratio, 'preclose': preclose}
-        return dict
+    # def get_stock_inform(self):
+    #     stock = qs.realtime_data(code=self.code)
+    #     name = stock['名称'].values[0]
+    #     close = stock['最新'].values[0]
+    #     ratio = stock['涨幅'].values[0]
+    #     preclose = stock['昨收'].values[0]
+    #     dict = {'name': name, 'close': close, 'ratio': ratio, 'preclose': preclose}
+    #     return dict
 
     def get_estimation(self):
         estimation = 0

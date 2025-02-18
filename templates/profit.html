@@ -16,174 +16,174 @@ Profit
 
 <h1>welcome，it just is an example</h1>
 <h3>每天都在亏钱</h3>
-<img src="data:image/png;base64,{{ graphic1 }}" alt="Plot">
+<img src="data:image/png;base64,{{ graphic2 }}" alt="Plot">
 <h3>和沪深300 比比看</h3>
-<img src="data:image/png;base64,{{ graphic }}" alt="Plot">
+<img src="data:image/png;base64,{{ graphic1 }}" alt="Plot">
 
 <div id="profit_day" style="width: 800px;height:300px;"></div>
 <script type="text/javascript">
 
-    // 基于准备好的dom，初始化echarts实例
-    var myChart = echarts.init(document.getElementById('profit_day'));
+<!--    // 基于准备好的dom，初始化echarts实例-->
+<!--    var myChart = echarts.init(document.getElementById('profit_day'));-->
 
-    // 指定图表的配置项和数据
-    var series_data = [];
-    var xAxis_data = [];
+<!--    // 指定图表的配置项和数据-->
+<!--    var series_data = [];-->
+<!--    var xAxis_data = [];-->
 
-    {% for profit in profits %}
-    series_data.push({{ profit.profit }})
-    { #注意这里的双引号# }
-    xAxis_data.push("{{ profit.date}}")
-    {% endfor %}
+<!--    {% for profit in profits %}-->
+<!--    series_data.push({{ profit.profit }})-->
+<!--    { #注意这里的双引号# }-->
+<!--    xAxis_data.push("{{ profit.date}}")-->
+<!--    {% endfor %}-->
 
-    var option = {
-        title: {
-            text: '亏钱的艺术'
-        },
-        tooltip: {},
-        legend: {
-            data: ['亏钱']
-        },
-        xAxis: {
-            data: xAxis_data
-        },
-        yAxis: {
-            axisLabel: {
-                formatter: '{value} 元'
-            },
-        },
-        series: [
-            {
-                name: '亏钱',
-                type: 'bar',
-                data: series_data
-            }
-        ]
-    };
-    // 使用刚指定的配置项和数据显示图表。
-    myChart.setOption(option);
-</script>
-
-
-<div id="container" style="width: 800px;height:300px;"></div>
-<script type="text/javascript">
-                var dom = document.getElementById("container");
-                var myChart = echarts.init(dom);
-
-                var series_data = [];
-                var xAxis_data_300 = [];
-                var xAxis_data_total = [];
-
-                {% for bench in bench2total %}
-                series_data.push("{{ bench.date }}")
-                { #注意这里的双引号# }
-                xAxis_data_300.push("{{ bench.bench_ratio}}")
-                xAxis_data_total.push("{{ bench.total_ratio}}")
-                {% endfor %}
+<!--    var option = {-->
+<!--        title: {-->
+<!--            text: '亏钱的艺术'-->
+<!--        },-->
+<!--        tooltip: {},-->
+<!--        legend: {-->
+<!--            data: ['亏钱']-->
+<!--        },-->
+<!--        xAxis: {-->
+<!--            data: xAxis_data-->
+<!--        },-->
+<!--        yAxis: {-->
+<!--            axisLabel: {-->
+<!--                formatter: '{value} 元'-->
+<!--            },-->
+<!--        },-->
+<!--        series: [-->
+<!--            {-->
+<!--                name: '亏钱',-->
+<!--                type: 'bar',-->
+<!--                data: series_data-->
+<!--            }-->
+<!--        ]-->
+<!--    };-->
+<!--    // 使用刚指定的配置项和数据显示图表。-->
+<!--    myChart.setOption(option);-->
+<!--</script>-->
 
 
-                option = {
-                    title: {
-                        text: '对比300'
-                    },
-                    tooltip: {},
+<!--<div id="container" style="width: 800px;height:300px;"></div>-->
+<!--<script type="text/javascript">-->
+<!--                var dom = document.getElementById("container");-->
+<!--                var myChart = echarts.init(dom);-->
 
-                    legend: {
-                        data1: ['沪深300'],
-                        data2: ['你的资产'],
-                    },
+<!--                var series_data = [];-->
+<!--                var xAxis_data_300 = [];-->
+<!--                var xAxis_data_total = [];-->
 
-                    xAxis: {
-                        data: series_data
-                    },
-
-                    yAxis: {
-                        axisLabel: {
-                            formatter: '{value} %'
-                        },
-
-                    },
-
-                    series: [{
-                        name: '沪深300',
-                        type: 'line',
-                        //data: [5, 20, 36, 10, 10, 20]
-                        data: xAxis_data_300,
-                        smooth: true
-                    },
-
-                    {
-                        name: '你的资产',
-                        type: 'line',
-                        //data: [5, 20, 36, 10, 10, 20]
-                        data: xAxis_data_total,
-                        smooth: true,
-                        color: 'red',
-                    },
-
-                    ]
-                };
-                myChart.setOption(option);
-</script>
+<!--                {% for bench in bench2total %}-->
+<!--                series_data.push("{{ bench.date }}")-->
+<!--                { #注意这里的双引号# }-->
+<!--                xAxis_data_300.push("{{ bench.bench_ratio}}")-->
+<!--                xAxis_data_total.push("{{ bench.total_ratio}}")-->
+<!--                {% endfor %}-->
 
 
-<div id="svr_curve" style="width: 800px;height:300px;"></div>
-<script type="text/javascript">
-                var dom = document.getElementById("svr_curve");
-                var myChart = echarts.init(dom);
+<!--                option = {-->
+<!--                    title: {-->
+<!--                        text: '对比300'-->
+<!--                    },-->
+<!--                    tooltip: {},-->
 
-                var series_data = [];
-                var xAxis_data_300 = [];
-                var xAxis_data_value = [];
+<!--                    legend: {-->
+<!--                        data1: ['沪深300'],-->
+<!--                        data2: ['你的资产'],-->
+<!--                    },-->
 
-                {% for bench in bench2svr %}
-                series_data.push("{{ bench.date }}")
-                { #注意这里的双引号# }
-                xAxis_data_300.push("{{ bench.bench_ratio}}")
-                xAxis_data_value.push("{{ bench.value_ratio}}")
-                {% endfor %}
+<!--                    xAxis: {-->
+<!--                        data: series_data-->
+<!--                    },-->
 
-                option = {
-                    title: {
-                        text: 'svr__echart'
-                    },
-                    tooltip: {},
+<!--                    yAxis: {-->
+<!--                        axisLabel: {-->
+<!--                            formatter: '{value} %'-->
+<!--                        },-->
 
-                    legend: {
-                        data1: ['沪深300'],
-                        data2: ['svr'],
-                    },
+<!--                    },-->
 
-                    xAxis: {
-                        data: series_data,
-                    },
+<!--                    series: [{-->
+<!--                        name: '沪深300',-->
+<!--                        type: 'line',-->
+<!--                        //data: [5, 20, 36, 10, 10, 20]-->
+<!--                        data: xAxis_data_300,-->
+<!--                        smooth: true-->
+<!--                    },-->
 
-                    yAxis: {
-                        axisLabel: {
-                            formatter: '{value} %'
-                        },
+<!--                    {-->
+<!--                        name: '你的资产',-->
+<!--                        type: 'line',-->
+<!--                        //data: [5, 20, 36, 10, 10, 20]-->
+<!--                        data: xAxis_data_total,-->
+<!--                        smooth: true,-->
+<!--                        color: 'red',-->
+<!--                    },-->
 
-                    },
+<!--                    ]-->
+<!--                };-->
+<!--                myChart.setOption(option);-->
+<!--</script>-->
 
-                    series: [{
-                        name: '沪深300',
-                        type: 'line',
-                        data: xAxis_data_300,
-                        smooth: true
-                    },
 
-                    {
-                        name: 'svr',
-                        type: 'line',
-                        data: xAxis_data_value,
-                        smooth: true,
-                        color: 'red',
-                    },
+<!--<div id="svr_curve" style="width: 800px;height:300px;"></div>-->
+<!--<script type="text/javascript">-->
+<!--                var dom = document.getElementById("svr_curve");-->
+<!--                var myChart = echarts.init(dom);-->
 
-                    ]
-                };
-                myChart.setOption(option);
-</script>
+<!--                var series_data = [];-->
+<!--                var xAxis_data_300 = [];-->
+<!--                var xAxis_data_value = [];-->
+
+<!--                {% for bench in bench2svr %}-->
+<!--                series_data.push("{{ bench.date }}")-->
+<!--                { #注意这里的双引号# }-->
+<!--                xAxis_data_300.push("{{ bench.bench_ratio}}")-->
+<!--                xAxis_data_value.push("{{ bench.value_ratio}}")-->
+<!--                {% endfor %}-->
+
+<!--                option = {-->
+<!--                    title: {-->
+<!--                        text: 'svr__echart'-->
+<!--                    },-->
+<!--                    tooltip: {},-->
+
+<!--                    legend: {-->
+<!--                        data1: ['沪深300'],-->
+<!--                        data2: ['svr'],-->
+<!--                    },-->
+
+<!--                    xAxis: {-->
+<!--                        data: series_data,-->
+<!--                    },-->
+
+<!--                    yAxis: {-->
+<!--                        axisLabel: {-->
+<!--                            formatter: '{value} %'-->
+<!--                        },-->
+
+<!--                    },-->
+
+<!--                    series: [{-->
+<!--                        name: '沪深300',-->
+<!--                        type: 'line',-->
+<!--                        data: xAxis_data_300,-->
+<!--                        smooth: true-->
+<!--                    },-->
+
+<!--                    {-->
+<!--                        name: 'svr',-->
+<!--                        type: 'line',-->
+<!--                        data: xAxis_data_value,-->
+<!--                        smooth: true,-->
+<!--                        color: 'red',-->
+<!--                    },-->
+
+<!--                    ]-->
+<!--                };-->
+<!--                myChart.setOption(option);-->
+<!--</script>-->
 
 
 
